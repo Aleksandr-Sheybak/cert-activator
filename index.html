@@ -7,43 +7,57 @@
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
         :root {
-            --sidebar-width: 260px;
-            --header-height: 56px;
+            --sidebar-width: 280px;
+            --header-height: 60px;
             --accent: #ff9f0a;
+            --danger: #ff453a;
+            --success: #30d158;
+            --bg: #121214;
+            --card-bg: #1c1c1e;
+            --text: #f0f0f5;
+            --text-secondary: #98989d;
+            --border: #2c2c2e;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #121214; color: #f0f0f5; -webkit-tap-highlight-color: transparent; }
-        body { display: flex; flex-direction: column; }
+        html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
+        body {
+            background-image: linear-gradient(rgba(18,18,20,0.75), rgba(18,18,20,0.75)),
+                              url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSJ6sLOeVPZjavyj4KcZ_4x_OB7I2o8B6TpXg&s');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
 
         /* Header */
         .header {
-            height: var(--header-height); background: #1e1e20; display: flex; align-items: center; padding: 0 16px;
-            border-bottom: 1px solid #2c2c2e; position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+            height: var(--header-height); background: rgba(28,28,30,0.9); backdrop-filter: blur(15px);
+            display: flex; align-items: center; padding: 0 20px;
+            border-bottom: 1px solid var(--border); position: fixed; top: 0; left: 0; right: 0; z-index: 30;
         }
         .menu-btn {
             background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; margin-right: 16px;
             display: flex; align-items: center;
         }
         .header-title {
-            font-size: 18px; font-weight: 600; color: #fff;
+            font-size: 20px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 10px;
         }
         .logo-img {
-            height: 32px; width: 32px; border-radius: 50%; margin-right: 8px; object-fit: cover; border: 1px solid var(--accent);
+            height: 36px; width: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent);
         }
 
         /* Sidebar */
         .sidebar {
             position: fixed; top: var(--header-height); left: 0; bottom: 0;
-            width: var(--sidebar-width); background: #1a1a1c; border-right: 1px solid #2c2c2e;
-            transform: translateX(-100%); transition: transform 0.3s ease; z-index: 15;
+            width: var(--sidebar-width); background: #1a1a1c; border-right: 1px solid var(--border);
+            transform: translateX(-100%); transition: transform 0.3s ease; z-index: 25;
             padding: 20px 0; overflow-y: auto;
         }
         .sidebar.open { transform: translateX(0); }
         .sidebar ul { list-style: none; padding: 0; }
         .sidebar li a, .sidebar li button {
-            display: block; width: 100%; padding: 14px 24px; color: #ccc; text-decoration: none;
-            font-size: 16px; background: none; border: none; text-align: left; cursor: pointer;
-            transition: background 0.2s;
+            display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 24px;
+            color: #ccc; text-decoration: none; font-size: 16px; background: none; border: none;
+            text-align: left; cursor: pointer; transition: background 0.2s; border-radius: 0;
         }
         .sidebar li a:hover, .sidebar li button:hover { background: #2c2c2e; color: #fff; }
         .sidebar li a.active, .sidebar li button.active { color: var(--accent); background: #1f1f21; }
@@ -51,59 +65,108 @@
         /* Main content */
         .main {
             margin-top: var(--header-height); margin-left: 0;
-            padding: 20px; flex: 1; transition: margin-left 0.3s;
+            padding: 24px; transition: margin-left 0.3s;
         }
         .page { display: none; }
         .page.active { display: block; }
 
-        /* Cards & tables */
+        /* Cards */
         .card {
-            background: #1e1e20; border-radius: 24px; padding: 20px;
-            margin-bottom: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            background: var(--card-bg); border-radius: 20px; padding: 24px;
+            margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
         }
         .back-btn {
-            background: none; border: none; color: var(--accent); font-size: 20px; margin-bottom: 12px; cursor: pointer;
+            background: none; border: none; color: var(--accent); font-size: 20px; margin-bottom: 16px; cursor: pointer;
         }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { text-align: left; padding: 8px 6px; border-bottom: 1px solid #2c2c2e; color: #aaa; font-weight: 600; }
-        td { padding: 8px 6px; border-bottom: 1px solid #1c1c1e; }
+
+        /* Tabs */
+        .tabs {
+            display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 8px;
+        }
+        .tab {
+            background: none; border: none; color: var(--text-secondary); padding: 8px 20px;
+            font-size: 15px; font-weight: 500; cursor: pointer; border-radius: 12px; transition: 0.2s;
+        }
+        .tab.active { background: var(--accent); color: #000; }
+
+        /* Tables */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 15px; }
+        th { text-align: left; padding: 12px 8px; border-bottom: 1px solid var(--border); color: var(--text-secondary); font-weight: 600; }
+        td { padding: 12px 8px; border-bottom: 1px solid #1c1c1e; vertical-align: middle; }
         .badge {
-            display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 12px; font-weight: 600;
+            display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600;
         }
         .badge-active { background: #34c759; color: #fff; }
-        .badge-inactive { background: #e5e5ea; color: #000; }
-        .badge-issued { background: #007aff; color: #fff; }
+        .badge-inactive { background: #48484a; color: #fff; }
+        .badge-issued { background: #0a84ff; color: #fff; }
         .badge-stock { background: #636366; color: #fff; }
-        button.small { padding: 4px 10px; font-size: 12px; border-radius: 14px; min-width: auto; }
-        .hidden { display: none !important; }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; }
-        .modal-content { background: #1e1e20; border-radius: 24px; padding: 24px; max-width: 340px; width: 90%; position: relative; }
-        .close-btn { position: absolute; top: 10px; right: 15px; color: var(--accent); font-size: 24px; cursor: pointer; }
 
-        /* responsive */
+        /* Buttons */
+        button.primary {
+            background: var(--accent); color: #000; border: none; padding: 12px 24px;
+            border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        button.primary:hover { opacity: 0.9; transform: scale(1.02); }
+        button.danger { background: var(--danger); color: #fff; }
+        button.danger:hover { background: #cc372b; }
+        button.small-btn {
+            padding: 6px 12px; font-size: 13px; border-radius: 10px; background: #3a3a3c; color: #fff;
+            border: none; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 4px;
+        }
+        button.small-btn:hover { background: #4a4a4c; }
+
+        .hidden { display: none !important; }
+
+        /* Modals */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+            z-index: 100; padding: 20px;
+        }
+        .modal-content {
+            background: #1e1e20; border-radius: 24px; padding: 28px; position: relative;
+            width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+        }
+        .modal-lg { max-width: 640px; }
+        .close-btn {
+            position: absolute; top: 12px; right: 16px; color: var(--accent); font-size: 24px; cursor: pointer; background: none; border: none;
+        }
+
+        /* Inputs */
+        input, select, textarea {
+            background: #2c2c2e; border: 1px solid var(--border); border-radius: 12px;
+            padding: 12px; font-size: 15px; color: #fff; width: 100%; margin: 8px 0;
+            outline: none; font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+
+        /* Mobile friendly */
         @media (min-width: 768px) {
             .sidebar { transform: translateX(0); }
             .main { margin-left: var(--sidebar-width); }
             .menu-btn { display: none; }
+            .table-wrap { overflow-x: visible; }
         }
-        /* для очень маленьких экранов убираем горизонтальный скролл таблиц */
-        .table-wrap { overflow-x: auto; }
     </style>
 </head>
 <body>
     <!-- Header -->
     <header class="header">
         <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-        <img class="logo-img" src="https://sun9-52.userapi.com/s/v1/ig2/FU7bN5q2jKV6WvIw1MQODNfSCOpVecMzuP5FQdOyrofQcIcs-bIRdAjlPtoHyuC1uVQI4rGjL04epRK863qokx-Q.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&cs=1024x0" alt="лого">
-        <span class="header-title">Самоцветы DEV</span>
+        <div class="header-title">
+            <img class="logo-img" src="https://sun9-52.userapi.com/s/v1/ig2/FU7bN5q2jKV6WvIw1MQODNfSCOpVecMzuP5FQdOyrofQcIcs-bIRdAjlPtoHyuC1uVQI4rGjL04epRK863qokx-Q.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&cs=1024x0" alt="Логотип">
+            Самоцветы DEV
+        </div>
     </header>
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
         <ul>
             <li><button onclick="navigate('home')" id="navHome">🏠 Главная</button></li>
-            <li id="certsMenuItem" class="hidden"><button onclick="navigate('certs')" id="navCerts">💎 Сертификаты</button></li>
-            <li id="archiveMenuItem" class="hidden"><button onclick="navigate('archive')" id="navArchive">📦 Архив</button></li>
+            <li id="certsMenuItem"><button onclick="navigate('certs')" id="navCerts">💎 Сертификаты</button></li>
             <li><button onclick="navigate('logs')" id="navLogs">📋 Логи</button></li>
             <li><button onclick="logout()">🚪 Выйти</button></li>
         </ul>
@@ -111,59 +174,50 @@
 
     <!-- Main content -->
     <div class="main" id="mainContent">
-        <!-- страница входа (будет показываться, пока не вошли) -->
+        <!-- Страница входа -->
         <div id="loginPage" class="page active">
-            <div class="card">
-                <img src="https://sun9-52.userapi.com/s/v1/ig2/FU7bN5q2jKV6WvIw1MQODNfSCOpVecMzuP5FQdOyrofQcIcs-bIRdAjlPtoHyuC1uVQI4rGjL04epRK863qokx-Q.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&cs=1024x0" style="width:64px; border-radius:50%; margin-bottom:12px;">
+            <div class="card" style="max-width: 400px; margin: 0 auto; text-align: center;">
+                <img src="https://sun9-52.userapi.com/s/v1/ig2/FU7bN5q2jKV6WvIw1MQODNfSCOpVecMzuP5FQdOyrofQcIcs-bIRdAjlPtoHyuC1uVQI4rGjL04epRK863qokx-Q.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&cs=1024x0" style="width:80px; border-radius:50%; margin-bottom:16px;">
                 <h2>Вход в систему</h2>
-                <select id="userSelect" style="width:100%; padding:12px; margin:8px 0; background:#18181a; color:#fff; border:1px solid #2c2c2e; border-radius:10px;">
+                <select id="userSelect">
                     <option value="root">Root</option>
                     <option value="volonter1">Volonter1</option>
                     <option value="volonter2">Volonter2</option>
                 </select>
-                <input type="password" id="passwordInput" placeholder="Пароль" style="width:100%; padding:12px; margin:8px 0; background:#18181a; color:#fff; border:1px solid #2c2c2e; border-radius:10px;">
-                <button class="primary" onclick="login()" style="background:var(--accent); color:#000; padding:12px; border:none; border-radius:20px; width:100%; font-weight:600;">Войти</button>
-                <div id="loginStatus" style="color:red; margin-top:8px;"></div>
+                <input type="password" id="passwordInput" placeholder="Пароль">
+                <button class="primary" onclick="login()" style="width:100%; justify-content:center;">Войти</button>
+                <div id="loginStatus" style="color:red; margin-top:12px;"></div>
             </div>
         </div>
 
         <!-- Главная (QR-активация) -->
         <div id="homePage" class="page">
-            <div class="card">
-                <h2 style="margin-bottom:16px;">Активация сертификата</h2>
-                <div id="codeDisplay" style="background:#18181a; padding:16px; border-radius:12px; margin-bottom:12px; font-size:20px; text-align:center;">—</div>
-                <div id="qrStatus" style="margin-bottom:12px;"></div>
-                <button id="activateBtn" style="background:var(--accent); color:#000; padding:12px 20px; border:none; border-radius:20px; width:100%;" onclick="activateCode()" class="hidden">Активировать</button>
-                <div style="margin-top:12px; display:flex; gap:8px; justify-content:center;">
-                    <button class="small primary" onclick="openScanner()" style="background:#2c2c2e; color:#fff;">📷 Сканировать</button>
-                    <button class="small primary" onclick="openGallery()" style="background:#2c2c2e; color:#fff;">🖼️ Загрузить</button>
+            <div class="card" style="max-width: 500px; margin: 0 auto;">
+                <h2 style="margin-bottom:20px; text-align:center;">Активация сертификата</h2>
+                <div id="codeDisplay" style="background:#2c2c2e; padding:20px; border-radius:14px; font-size:24px; text-align:center; margin-bottom:16px;">—</div>
+                <div id="qrStatus" style="text-align:center; margin-bottom:16px;"></div>
+                <button id="activateBtn" class="primary hidden" onclick="activateCode()" style="width:100%;">Активировать</button>
+                <div style="display:flex; gap:12px; margin-top:16px; justify-content:center;">
+                    <button class="small-btn" onclick="openScanner()"><span>📷</span> Сканировать</button>
+                    <button class="small-btn" onclick="openGallery()"><span>🖼️</span> Из галереи</button>
                 </div>
             </div>
         </div>
 
-        <!-- Сертификаты -->
+        <!-- Сертификаты (с вкладками) -->
         <div id="certsPage" class="page">
-            <button class="back-btn" onclick="navigate('home')">← Назад</button>
             <div class="card">
-                <h2>Управление сертификатами</h2>
-                <button onclick="openCreateModal()" style="background:var(--accent); color:#000; margin:12px 0;">➕ Создать</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h2>Управление сертификатами</h2>
+                    <button class="primary" onclick="openCreateModal()">➕ Создать</button>
+                </div>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchCertTab('active')">Активные</button>
+                    <button class="tab" onclick="switchCertTab('archive')">Архив</button>
+                </div>
                 <div class="table-wrap">
                     <table id="certsTable">
-                        <thead><tr><th>Код</th><th>Активация</th><th>Выдан</th><th>Действия</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Архив -->
-        <div id="archivePage" class="page">
-            <button class="back-btn" onclick="navigate('home')">← Назад</button>
-            <div class="card">
-                <h2>Архив активированных</h2>
-                <div class="table-wrap">
-                    <table id="archiveTable">
-                        <thead><tr><th>Код</th><th>Дата создания</th><th>Выдан</th><th>Действия</th></tr></thead>
+                        <thead><tr><th>Код</th><th>Статус</th><th>Выдан</th><th>Действия</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -173,75 +227,99 @@
         <!-- Логи -->
         <div id="logsPage" class="page">
             <div class="card">
-                <h2>Журнал действий</h2>
+                <h2 style="margin-bottom:16px;">Журнал действий</h2>
                 <div class="table-wrap">
                     <table id="logsTable">
-                        <thead><tr><th>Время</th><th>Польз.</th><th>Действие</th><th>Код</th><th>Рез-т</th></tr></thead>
+                        <thead><tr><th>Время</th><th>Пользователь</th><th>Действие</th><th>Код</th><th>Результат</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
-                <button onclick="loadLogs()" style="margin-top:8px; background:#2c2c2e; color:#fff;">Обновить</button>
+                <button class="primary" onclick="loadLogs()" style="margin-top:16px;">Обновить</button>
             </div>
         </div>
     </div>
 
     <!-- Модальные окна -->
+    <!-- Создание сертификата -->
     <div id="createModal" class="modal hidden">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeCreateModal()">&times;</span>
+            <button class="close-btn" onclick="closeCreateModal()">&times;</button>
             <h3>Создать сертификат</h3>
-            <input type="text" id="newCode" placeholder="Код">
-            <select id="newDuration"><option value="1 день">1 день</option><option value="3 дня">3 дня</option><option value="10 дней">10 дней</option><option value="30 дней">30 дней</option><option value="бессрочно" selected>Бессрочно</option></select>
-            <textarea id="newComment" placeholder="Комментарий"></textarea>
-            <button onclick="createCertificate()" style="background:var(--accent); color:#000;">Создать</button>
-            <div id="createStatus"></div>
+            <input type="text" id="newCode" placeholder="Код (GF...)">
+            <select id="newDuration">
+                <option value="1 день">1 день</option>
+                <option value="3 дня">3 дня</option>
+                <option value="10 дней">10 дней</option>
+                <option value="30 дней">30 дней</option>
+                <option value="бессрочно" selected>Бессрочно</option>
+            </select>
+            <textarea id="newComment" rows="2" placeholder="Комментарий"></textarea>
+            <button class="primary" onclick="createCertificate()" style="width:100%; margin-top:12px;">Создать</button>
+            <div id="createStatus" style="margin-top:12px;"></div>
         </div>
     </div>
+
+    <!-- Детали сертификата -->
     <div id="detailsModal" class="modal hidden">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeDetails()">&times;</span>
-            <h3 id="detailsTitle"></h3>
-            <div id="detailsContent"></div>
+        <div class="modal-content modal-lg">
+            <button class="close-btn" onclick="closeDetails()">&times;</button>
+            <h3 id="detailsTitle" style="margin-bottom:20px;"></h3>
+            <div id="detailsContent" style="font-size:16px; line-height:1.8;"></div>
         </div>
     </div>
+
+    <!-- QR код -->
     <div id="qrModal" class="modal hidden">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeQr()">&times;</span>
+            <button class="close-btn" onclick="closeQr()">&times;</button>
             <h3 id="qrTitle"></h3>
-            <img id="qrImg" style="width:100%; max-width:250px;">
+            <img id="qrImg" style="width:100%; max-width:250px; margin:16px auto; display:block;">
             <input id="qrLink" readonly>
-            <button onclick="copyQr()">Копировать ссылку</button>
+            <button class="primary" onclick="copyQr()" style="width:100%;">📋 Копировать ссылку</button>
         </div>
     </div>
+
+    <!-- Графический сертификат -->
+    <div id="certDownloadModal" class="modal hidden">
+        <div class="modal-content modal-lg">
+            <button class="close-btn" onclick="closeCertDownload()">&times;</button>
+            <h3 style="margin-bottom:16px;">Сертификат готов</h3>
+            <canvas id="certCanvas" style="width:100%; max-width:700px; border-radius:12px; border:1px solid var(--border);"></canvas>
+            <div style="display:flex; gap:12px; margin-top:16px; justify-content:center;">
+                <button class="primary" onclick="downloadCertImage()">⬇️ Скачать</button>
+                <button class="primary" onclick="copyCertLink()">📋 Копировать ссылку</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Сканер -->
     <div id="scannerModal" class="modal hidden">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeScanner()">&times;</span>
+            <button class="close-btn" onclick="closeScanner()">&times;</button>
             <h3>Сканирование</h3>
-            <video id="scannerVideo" autoplay playsinline></video>
-            <p id="scannerStatus"></p>
+            <video id="scannerVideo" autoplay playsinline style="width:100%; border-radius:12px;"></video>
+            <p id="scannerStatus" style="margin-top:8px;"></p>
         </div>
     </div>
     <input type="file" id="galleryInput" accept="image/*" onchange="handleFileUpload(event)" class="hidden">
 
     <script>
         // ========== КОНФИГУРАЦИЯ ==========
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbxKwQqAtjyR5badwA5aP6yuOTOYAPHQedYMgErQpCnB9Rf0Vrz2DuiiuEoO1u4pon0i/exec';   // <-- замените на ваш URL
+        const apiUrl = 'ВАШ_API_URL';   // <-- вставьте ваш URL Apps Script
         const USERS = { root: 'space1987', volonter1: 'v321', volonter2: 'v987' };
 
         // состояние
         let currentUser = null;
-        let currentScreen = 'home';
-        let sidebarOpen = false;
+        let currentCertTab = 'active'; // 'active' or 'archive'
+        let currentPage = 'home';
         let qrCode = null;
 
         // DOM
         const sidebar = document.getElementById('sidebar');
-        const main = document.getElementById('mainContent');
         const pages = {
             login: document.getElementById('loginPage'),
             home: document.getElementById('homePage'),
             certs: document.getElementById('certsPage'),
-            archive: document.getElementById('archivePage'),
             logs: document.getElementById('logsPage')
         };
         const activateBtn = document.getElementById('activateBtn');
@@ -261,39 +339,26 @@
             script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
             document.body.appendChild(script);
         }
-
         function userParam() { return currentUser || 'неизвестный'; }
-
         function showPage(name) {
-            Object.keys(pages).forEach(k => pages[k].classList.remove('active'));
+            Object.values(pages).forEach(p => p.classList.remove('active'));
             if (pages[name]) pages[name].classList.add('active');
-            currentScreen = name;
-            // подсветка в меню
+            currentPage = name;
             document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
             document.getElementById('navHome').classList.toggle('active', name === 'home');
             document.getElementById('navCerts').classList.toggle('active', name === 'certs');
-            document.getElementById('navArchive').classList.toggle('active', name === 'archive');
             document.getElementById('navLogs').classList.toggle('active', name === 'logs');
             if (name === 'home') updateHome();
-            if (name === 'certs') loadCertificates();
-            if (name === 'archive') loadArchive();
+            if (name === 'certs') loadCertificatesForTab();
             if (name === 'logs') loadLogs();
             closeSidebar();
         }
-
-        function navigate(name) {
-            showPage(name);
-        }
+        function navigate(name) { showPage(name); }
 
         function toggleSidebar() {
-            sidebarOpen = !sidebarOpen;
-            sidebar.classList.toggle('open', sidebarOpen);
+            sidebar.classList.toggle('open');
         }
-
-        function closeSidebar() {
-            sidebarOpen = false;
-            sidebar.classList.remove('open');
-        }
+        function closeSidebar() { sidebar.classList.remove('open'); }
 
         // ========== АВТОРИЗАЦИЯ ==========
         function login() {
@@ -309,30 +374,25 @@
                 document.getElementById('loginStatus').textContent = 'Неверный пароль';
             }
         }
-
         function logout() {
             currentUser = null;
-            localStorage.removeItem('cert_user');
-            localStorage.removeItem('cert_logged_in');
+            localStorage.removeItem('cert_user'); localStorage.removeItem('cert_logged_in');
             pages.login.classList.add('active');
             Object.keys(pages).forEach(k => { if (k !== 'login') pages[k].classList.remove('active'); });
             closeSidebar();
             document.getElementById('passwordInput').value = '';
             document.getElementById('loginStatus').textContent = '';
         }
-
         function initUI() {
             pages.login.classList.remove('active');
-            // настройка видимости меню
             const isRoot = (currentUser === 'root');
             document.getElementById('certsMenuItem').classList.toggle('hidden', !isRoot);
-            document.getElementById('archiveMenuItem').classList.toggle('hidden', !isRoot);
             showPage('home');
         }
 
         // ========== ГЛАВНАЯ (QR) ==========
         function updateHome() {
-            qrCode = getUrlParam('code');
+            qrCode = new URLSearchParams(window.location.search).get('code') || qrCode;
             if (qrCode) {
                 codeDisplay.textContent = qrCode;
                 checkStatusForActivation(qrCode);
@@ -342,41 +402,35 @@
                 activateBtn.classList.add('hidden');
             }
         }
-
-        function getUrlParam(name) {
-            return new URLSearchParams(window.location.search).get(name);
-        }
-
         function checkStatusForActivation(code) {
             jsonp(apiUrl + '?action=status&code=' + code, function(d) {
                 if (d.error || d.status === 'unknown') {
-                    qrStatus.textContent = '❌ Неизвестный код';
+                    qrStatus.innerHTML = '<span style="color:#ff453a;">❌ Неизвестный код</span>';
                     activateBtn.classList.add('hidden');
                 } else if (d.status === 'Активирован') {
-                    qrStatus.textContent = '❌ Уже активирован';
+                    qrStatus.innerHTML = '<span style="color:#ff453a;">❌ Уже активирован</span>';
                     activateBtn.classList.add('hidden');
                 } else {
-                    qrStatus.textContent = '';
+                    qrStatus.innerHTML = '';
                     activateBtn.classList.remove('hidden');
                 }
             });
         }
-
         function activateCode() {
             if (!qrCode) return;
             activateBtn.disabled = true;
             jsonp(apiUrl + '?action=activate&code=' + qrCode + '&user=' + userParam(), function(d) {
                 activateBtn.disabled = false;
                 if (d.success) {
-                    qrStatus.innerHTML = '✅ ' + d.message;
+                    qrStatus.innerHTML = '<span style="color:#30d158;">✅ ' + d.message + '</span>';
                     activateBtn.classList.add('hidden');
                 } else {
-                    qrStatus.innerHTML = '❌ ' + d.message;
+                    qrStatus.innerHTML = '<span style="color:#ff453a;">❌ ' + d.message + '</span>';
                 }
             });
         }
 
-        // Сканер и галерея (прежние функции, без изменений)
+        // Сканер и галерея
         function openScanner() {
             scannerModal.classList.remove('hidden');
             scanningActive = true;
@@ -384,7 +438,7 @@
                 scannerVideo.srcObject = stream;
                 scannerVideo.play();
                 scanLoop();
-            }).catch(() => scannerStatus.textContent = 'Нет доступа к камере');
+            }).catch(() => { scannerStatus.textContent = 'Нет доступа к камере'; });
         }
         function scanLoop() {
             if (!scanningActive) return;
@@ -393,9 +447,13 @@
                 canvas.width = scannerVideo.videoWidth; canvas.height = scannerVideo.videoHeight;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(scannerVideo, 0, 0);
-                const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(data.data, canvas.width, canvas.height);
-                if (code) { scanningActive = false; closeScanner(); setQrCode(code.data); }
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, canvas.width, canvas.height);
+                if (code) {
+                    scanningActive = false;
+                    closeScanner();
+                    setQrCode(code.data);
+                }
             }
             requestAnimationFrame(scanLoop);
         }
@@ -415,8 +473,8 @@
                     const canvas = document.createElement('canvas');
                     canvas.width = img.width; canvas.height = img.height;
                     canvas.getContext('2d').drawImage(img, 0, 0);
-                    const data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
-                    const code = jsQR(data.data, canvas.width, canvas.height);
+                    const imageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, canvas.width, canvas.height);
                     if (code) setQrCode(code.data);
                     else alert('QR не найден');
                 };
@@ -429,58 +487,66 @@
             qrCode = code;
             codeDisplay.textContent = code;
             checkStatusForActivation(code);
-            // обновить URL без перезагрузки
             window.history.replaceState(null, '', '?code=' + code);
         }
 
-        // ========== СЕРТИФИКАТЫ ==========
-        function loadCertificates() {
+        // ========== СЕРТИФИКАТЫ (вкладки) ==========
+        function switchCertTab(tab) {
+            currentCertTab = tab;
+            document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.tab:nth-child(${tab === 'active' ? 1 : 2})`).classList.add('active');
+            loadCertificatesForTab();
+        }
+        function loadCertificatesForTab() {
+            const filter = currentCertTab; // 'active' или 'archive'
             jsonp(apiUrl + '?action=list', function(d) {
                 const tbody = document.querySelector('#certsTable tbody');
                 tbody.innerHTML = '';
-                (d.codes || []).forEach(item => {
+                let codes = d.codes || [];
+                if (filter === 'archive') {
+                    codes = codes.filter(c => c.status === 'Активирован');
+                }
+                codes.forEach(item => {
                     const tr = document.createElement('tr');
-                    const issueBtn = (currentUser === 'root') ? 
-                        `<button class="small" onclick="toggleIssue('${item.code}')">${item.issued === 'Отдан' ? '📦 На склад' : '📤 Отдать'}</button>` : '';
+                    const issueBtn = (currentUser === 'root') ?
+                        `<button class="small-btn" onclick="toggleIssue('${item.code}')">${item.issued === 'Отдан' ? '📦 На склад' : '📤 Отдать'}</button>` : '';
                     tr.innerHTML = `
                         <td><strong>${item.code}</strong></td>
                         <td><span class="badge ${item.status === 'Активирован' ? 'badge-active' : 'badge-inactive'}">${item.status}</span></td>
                         <td><span class="badge ${item.issued === 'Отдан' ? 'badge-issued' : 'badge-stock'}">${item.issued || 'На складе'}</span></td>
-                        <td>
-                            <button class="small" onclick="showDetails('${item.code}')">🔍</button>
+                        <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <button class="small-btn" onclick="showDetails('${item.code}')">🔍 Инфо</button>
                             ${issueBtn}
-                            <button class="small" onclick="showQr('${item.code}')">📷</button>
-                            <button class="small" onclick="downloadCert('${item.code}')">⬇️</button>
-                            ${item.status === 'Активирован' ? `<button class="small danger" onclick="rollback('${item.code}')">↩️</button>` : ''}
+                            <button class="small-btn" onclick="showQr('${item.code}')">📷 QR</button>
+                            <button class="small-btn" onclick="generateCertImage('${item.code}')">🎨 Сертификат</button>
+                            ${(item.status === 'Активирован' && filter === 'archive') ? `<button class="small-btn danger" onclick="rollback('${item.code}')">↩️ Восстановить</button>` : ''}
                         </td>`;
                     tbody.appendChild(tr);
                 });
             });
         }
-
         function toggleIssue(code) {
             jsonp(apiUrl + '?action=toggleIssue&code=' + code + '&user=' + userParam(), function(d) {
-                if (d.success) loadCertificates();
+                if (d.success) loadCertificatesForTab();
                 else alert(d.message);
             });
         }
-
         function showDetails(code) {
             jsonp(apiUrl + '?action=list', function(d) {
                 const item = (d.codes || []).find(c => c.code === code);
                 if (!item) return;
-                document.getElementById('detailsTitle').textContent = 'Детали ' + code;
+                document.getElementById('detailsTitle').textContent = 'Детали сертификата ' + code;
                 document.getElementById('detailsContent').innerHTML = `
-                    <p>Статус активации: <strong>${item.status}</strong></p>
-                    <p>Дата создания: ${item.date}</p>
-                    <p>Срок действия: ${item.duration}</p>
-                    <p>Комментарий: ${item.comment}</p>
-                    <p>Выдан: ${item.issued || 'На складе'}</p>`;
+                    <p><strong>Статус активации:</strong> ${item.status}</p>
+                    <p><strong>Дата создания:</strong> ${item.date}</p>
+                    <p><strong>Срок действия:</strong> ${item.duration}</p>
+                    <p><strong>Комментарий:</strong> ${item.comment}</p>
+                    <p><strong>Статус выдачи:</strong> ${item.issued || 'На складе'}</p>
+                `;
                 document.getElementById('detailsModal').classList.remove('hidden');
             });
         }
         function closeDetails() { document.getElementById('detailsModal').classList.add('hidden'); }
-
         function showQr(code) {
             const url = window.location.origin + window.location.pathname + '?code=' + code;
             document.getElementById('qrTitle').textContent = 'QR для ' + code;
@@ -489,49 +555,99 @@
             document.getElementById('qrModal').classList.remove('hidden');
         }
         function closeQr() { document.getElementById('qrModal').classList.add('hidden'); }
-        function copyQr() { navigator.clipboard.writeText(document.getElementById('qrLink').value); alert('Скопировано'); }
-
-        function downloadCert(code) {
-            const url = window.location.origin + window.location.pathname + '?code=' + code;
-            const canvas = document.createElement('canvas'); canvas.width = 600; canvas.height = 400;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#fff'; ctx.fillRect(0,0,600,400);
-            const img = new Image();
-            img.crossOrigin = 'Anonymous';
-            img.onload = function() {
-                ctx.drawImage(img, 380, 180, 200, 200);
-                ctx.fillStyle = '#000'; ctx.font = 'bold 24px Arial'; ctx.fillText('Сертификат', 20, 50);
-                ctx.font = '18px Arial'; ctx.fillText('Код: ' + code, 20, 90);
-                const link = document.createElement('a'); link.download = 'cert_'+code+'.png'; link.href = canvas.toDataURL(); link.click();
-            };
-            img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
+        function copyQr() {
+            navigator.clipboard.writeText(document.getElementById('qrLink').value);
+            alert('Ссылка скопирована');
         }
-
         function rollback(code) {
-            if (!confirm('Откатить активацию ' + code + '?')) return;
+            if (!confirm('Восстановить сертификат ' + code + '? (откатит активацию)')) return;
             jsonp(apiUrl + '?action=deactivate&code=' + code + '&user=' + userParam(), function(d) {
-                if (d.success) loadCertificates();
-                else alert(d.message);
+                if (d.success) {
+                    loadCertificatesForTab();
+                } else {
+                    alert(d.message);
+                }
             });
         }
 
-        // ========== АРХИВ ==========
-        function loadArchive() {
+        // ========== ГРАФИЧЕСКИЙ СЕРТИФИКАТ ==========
+        function generateCertImage(code) {
             jsonp(apiUrl + '?action=list', function(d) {
-                const tbody = document.querySelector('#archiveTable tbody');
-                tbody.innerHTML = '';
-                (d.codes || []).filter(c => c.status === 'Активирован').forEach(item => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><strong>${item.code}</strong></td>
-                        <td>${item.date}</td>
-                        <td><span class="badge ${item.issued === 'Отдан' ? 'badge-issued' : 'badge-stock'}">${item.issued || 'На складе'}</span></td>
-                        <td>
-                            <button class="small" onclick="showDetails('${item.code}')">🔍</button>
-                            <button class="small danger" onclick="rollback('${item.code}')">↩️</button>
-                        </td>`;
-                    tbody.appendChild(tr);
-                });
+                const item = (d.codes || []).find(c => c.code === code);
+                if (!item) return;
+                const canvas = document.getElementById('certCanvas');
+                canvas.width = 800;
+                canvas.height = 500;
+                const ctx = canvas.getContext('2d');
+                // Фон
+                ctx.fillStyle = '#1c1c1e';
+                ctx.fillRect(0, 0, 800, 500);
+                // Рамка
+                ctx.strokeStyle = '#ff9f0a';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(10, 10, 780, 480);
+                // Логотип
+                const logo = new Image();
+                logo.crossOrigin = 'Anonymous';
+                logo.src = 'https://sun9-52.userapi.com/s/v1/ig2/FU7bN5q2jKV6WvIw1MQODNfSCOpVecMzuP5FQdOyrofQcIcs-bIRdAjlPtoHyuC1uVQI4rGjL04epRK863qokx-Q.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&cs=1024x0';
+                logo.onload = function() {
+                    ctx.drawImage(logo, 30, 30, 64, 64);
+                    // Текст
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 28px Arial';
+                    ctx.fillText('Подарочный сертификат', 120, 70);
+                    ctx.font = '20px Arial';
+                    ctx.fillText('Самоцветы DEV', 120, 100);
+                    ctx.font = '24px Arial';
+                    ctx.fillText('Код: ' + code, 40, 160);
+                    ctx.fillText('Срок действия: ' + item.duration, 40, 200);
+                    if (item.comment) {
+                        ctx.font = '18px Arial';
+                        ctx.fillText('Комментарий: ' + item.comment, 40, 240);
+                    }
+                    // QR код
+                    const qrImg = new Image();
+                    qrImg.crossOrigin = 'Anonymous';
+                    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(window.location.origin + window.location.pathname + '?code=' + code);
+                    qrImg.onload = function() {
+                        ctx.drawImage(qrImg, 560, 260, 200, 200);
+                        // Показать модальное окно
+                        document.getElementById('certDownloadModal').classList.remove('hidden');
+                        // Сохранить ссылку для скачивания
+                        window._certCode = code;
+                    };
+                    qrImg.src = qrUrl;
+                };
+            });
+        }
+        function closeCertDownload() { document.getElementById('certDownloadModal').classList.add('hidden'); }
+        function downloadCertImage() {
+            const canvas = document.getElementById('certCanvas');
+            const link = document.createElement('a');
+            link.download = 'certificate_' + window._certCode + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        function copyCertLink() {
+            const url = window.location.origin + window.location.pathname + '?code=' + window._certCode;
+            navigator.clipboard.writeText(url).then(() => alert('Ссылка скопирована'));
+        }
+
+        // ========== СОЗДАНИЕ ==========
+        function openCreateModal() { document.getElementById('createModal').classList.remove('hidden'); }
+        function closeCreateModal() { document.getElementById('createModal').classList.add('hidden'); }
+        function createCertificate() {
+            const code = document.getElementById('newCode').value.trim().replace(/[^A-Za-z0-9]/g, '');
+            const duration = document.getElementById('newDuration').value;
+            const comment = document.getElementById('newComment').value.trim();
+            if (!code) return alert('Введите код');
+            jsonp(apiUrl + '?action=create&code=' + code + '&duration=' + duration + '&comment=' + comment + '&user=' + userParam(), function(d) {
+                if (d.success) {
+                    closeCreateModal();
+                    loadCertificatesForTab();
+                } else {
+                    alert(d.message);
+                }
             });
         }
 
@@ -548,22 +664,6 @@
             });
         }
 
-        // ========== СОЗДАНИЕ СЕРТИФИКАТА ==========
-        function openCreateModal() { document.getElementById('createModal').classList.remove('hidden'); }
-        function closeCreateModal() { document.getElementById('createModal').classList.add('hidden'); }
-        function createCertificate() {
-            const code = document.getElementById('newCode').value.trim();
-            const duration = document.getElementById('newDuration').value;
-            const comment = document.getElementById('newComment').value.trim();
-            if (!code) return alert('Введите код');
-            jsonp(apiUrl + '?action=create&code=' + code + '&duration=' + duration + '&comment=' + comment + '&user=' + userParam(), function(d) {
-                if (d.success) {
-                    closeCreateModal();
-                    loadCertificates();
-                } else alert(d.message);
-            });
-        }
-
         // ========== ИНИЦИАЛИЗАЦИЯ ==========
         (function() {
             const saved = localStorage.getItem('cert_logged_in') === 'true' ? localStorage.getItem('cert_user') : null;
@@ -573,11 +673,8 @@
             } else {
                 pages.login.classList.add('active');
             }
-            // закрываем боковое меню при клике вне его (мобильная)
             document.addEventListener('click', function(e) {
-                if (!sidebar.contains(e.target) && e.target !== document.querySelector('.menu-btn')) {
-                    closeSidebar();
-                }
+                if (!sidebar.contains(e.target) && e.target !== document.querySelector('.menu-btn')) closeSidebar();
             });
         })();
     </script>
