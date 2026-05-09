@@ -129,8 +129,9 @@
         .modal-content {
             background: #1e1e20; border-radius: 24px; padding: 28px; position: relative;
             width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+            display: flex; flex-direction: column; align-items: center;
         }
-        .modal-lg { max-width: 640px; }
+        .modal-lg { max-width: 700px; }
         .close-btn {
             position: absolute; top: 12px; right: 16px; color: var(--accent); font-size: 24px; cursor: pointer; background: none; border: none;
         }
@@ -142,6 +143,21 @@
             outline: none; font-family: inherit;
         }
         input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+
+        /* Spinner */
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.8s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
         /* Mobile friendly */
         @media (min-width: 768px) {
@@ -284,7 +300,9 @@
         <div class="modal-content modal-lg">
             <button class="close-btn" onclick="closeCertDownload()">&times;</button>
             <h3 style="margin-bottom:16px;">Сертификат готов</h3>
-            <canvas id="certCanvas" style="width:100%; max-width:700px; border-radius:12px; border:1px solid var(--border);"></canvas>
+            <!-- Спиннер (появляется во время загрузки) -->
+            <div id="certSpinner" class="spinner"></div>
+            <canvas id="certCanvas" style="display:none; width:100%; max-width:700px; border-radius:12px; border:1px solid var(--border);"></canvas>
             <div style="display:flex; gap:12px; margin-top:16px; justify-content:center;">
                 <button class="primary" onclick="downloadCertImage()">⬇️ Скачать</button>
                 <button class="primary" onclick="copyCertLink()">📋 Копировать ссылку</button>
@@ -305,16 +323,14 @@
 
     <script>
         // ========== КОНФИГУРАЦИЯ ==========
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbyGdOFoHlbOQ5GpAFELjbT6qB0dZ_nQF-r_Rv8868_YIl4bzP9Z4_kVHICow-HAWUkL/exec';   // <-- вставьте ваш URL Apps Script
+        const apiUrl = 'ВАШ_API_URL';   // <-- вставьте ваш URL Apps Script
         const USERS = { root: 'space1987', volonter1: 'v321', volonter2: 'v987' };
 
-        // состояние
         let currentUser = null;
-        let currentCertTab = 'active'; // 'active' or 'archive'
+        let currentCertTab = 'active';
         let currentPage = 'home';
         let qrCode = null;
 
-        // DOM
         const sidebar = document.getElementById('sidebar');
         const pages = {
             login: document.getElementById('loginPage'),
@@ -498,7 +514,7 @@
             loadCertificatesForTab();
         }
         function loadCertificatesForTab() {
-            const filter = currentCertTab; // 'active' или 'archive'
+            const filter = currentCertTab;
             jsonp(apiUrl + '?action=list', function(d) {
                 const tbody = document.querySelector('#certsTable tbody');
                 tbody.innerHTML = '';
@@ -570,30 +586,43 @@
             });
         }
 
-        // ========== ГРАФИЧЕСКИЙ СЕРТИФИКАТ ==========
+        // ========== ГРАФИЧЕСКИЙ СЕРТИФИКАТ (исправленный) ==========
         function generateCertImage(code) {
+            const modal = document.getElementById('certDownloadModal');
+            const spinner = document.getElementById('certSpinner');
+            const canvas = document.getElementById('certCanvas');
+            // Показываем модалку и спиннер, скрываем canvas
+            modal.classList.remove('hidden');
+            spinner.style.display = 'block';
+            canvas.style.display = 'none';
+            
             jsonp(apiUrl + '?action=list', function(d) {
                 const item = (d.codes || []).find(c => c.code === code);
-                if (!item) return;
-                const canvas = document.getElementById('certCanvas');
+                if (!item) {
+                    alert('Сертификат не найден');
+                    closeCertDownload();
+                    return;
+                }
+                // Начинаем отрисовку
                 canvas.width = 800;
                 canvas.height = 500;
                 const ctx = canvas.getContext('2d');
                 // Фон
                 ctx.fillStyle = '#1c1c1e';
                 ctx.fillRect(0, 0, 800, 500);
-                // Рамка
                 ctx.strokeStyle = '#ff9f0a';
                 ctx.lineWidth = 3;
                 ctx.strokeRect(10, 10, 780, 480);
-                // Логотип
+                
+                // Загружаем логотип
                 const logo = new Image();
                 logo.crossOrigin = 'Anonymous';
                 logo.src = 'https://sun9-52.userapi.com/s/v1/ig2/FU7bN5q2jKV6WvIw1MQODNfSCOpVecMzuP5FQdOyrofQcIcs-bIRdAjlPtoHyuC1uVQI4rGjL04epRK863qokx-Q.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&cs=1024x0';
+                
                 logo.onload = function() {
                     ctx.drawImage(logo, 30, 30, 64, 64);
                     // Текст
-                    ctx.fillStyle = '#fff';
+                    ctx.fillStyle = '#ffffff';
                     ctx.font = 'bold 28px Arial';
                     ctx.fillText('Подарочный сертификат', 120, 70);
                     ctx.font = '20px Arial';
@@ -605,31 +634,45 @@
                         ctx.font = '18px Arial';
                         ctx.fillText('Комментарий: ' + item.comment, 40, 240);
                     }
-                    // QR код
+                    
+                    // Загружаем QR-код
                     const qrImg = new Image();
                     qrImg.crossOrigin = 'Anonymous';
                     const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(window.location.origin + window.location.pathname + '?code=' + code);
                     qrImg.onload = function() {
-                        ctx.drawImage(qrImg, 560, 260, 200, 200);
-                        // Показать модальное окно
-                        document.getElementById('certDownloadModal').classList.remove('hidden');
-                        // Сохранить ссылку для скачивания
+                        ctx.drawImage(qrImg, 580, 280, 200, 200);
+                        // Рисование завершено — показываем canvas, скрываем спиннер
+                        spinner.style.display = 'none';
+                        canvas.style.display = 'block';
                         window._certCode = code;
+                    };
+                    qrImg.onerror = function() {
+                        alert('Не удалось загрузить QR-код. Проверьте интернет.');
+                        closeCertDownload();
                     };
                     qrImg.src = qrUrl;
                 };
+                logo.onerror = function() {
+                    alert('Не удалось загрузить логотип.');
+                    closeCertDownload();
+                };
             });
         }
-        function closeCertDownload() { document.getElementById('certDownloadModal').classList.add('hidden'); }
+        function closeCertDownload() {
+            document.getElementById('certDownloadModal').classList.add('hidden');
+            // Сброс спиннера
+            document.getElementById('certSpinner').style.display = 'none';
+            document.getElementById('certCanvas').style.display = 'none';
+        }
         function downloadCertImage() {
             const canvas = document.getElementById('certCanvas');
             const link = document.createElement('a');
-            link.download = 'certificate_' + window._certCode + '.png';
+            link.download = 'certificate_' + (window._certCode || 'unknown') + '.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
         function copyCertLink() {
-            const url = window.location.origin + window.location.pathname + '?code=' + window._certCode;
+            const url = window.location.origin + window.location.pathname + '?code=' + (window._certCode || '');
             navigator.clipboard.writeText(url).then(() => alert('Ссылка скопирована'));
         }
 
