@@ -53,12 +53,11 @@
     </div>
 
     <script>
-        // ⚡ ЕДИНСТВЕННОЕ, ЧТО НУЖНО ПОМЕНЯТЬ – ВАШ НОВЫЙ URL ИЗ APPS SCRIPT
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbw1rZR10H1aMnIaoWookX8Oe1wt3g2tqAv5ZBOaqDJq6cK09KK4qzDSwo-4mMZbuG1L/exec';
-        
+        // ⚡ ВСТАВЬТЕ ВАШ НОВЫЙ URL ЗДЕСЬ
+        const apiUrl = 'https://script.google.com/macros/s/AKfycbw8N5YBU_G-_VIoosdNXRwRXKA7sp0QwLRk6O5sln4DxKM98MKLxd3b9lBWj1I1g7bN/exec';
+
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-
         const codeDisplay = document.getElementById('codeDisplay');
         const statusDiv = document.getElementById('statusArea');
         const btn = document.getElementById('activateBtn');
@@ -70,10 +69,15 @@
 
         async function checkStatus() {
             try {
-                const response = await fetch(`${apiUrl}?action=status&code=${encodeURIComponent(code)}`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const url = `${apiUrl}?action=status&code=${encodeURIComponent(code)}`;
+                const response = await fetch(url, { method: 'GET' });
+                if (!response.ok) {
+                    throw new Error(`Ошибка сервера (${response.status})`);
+                }
                 const data = await response.json();
-                if (data.error) throw new Error(data.error);
+                if (data.error) {
+                    throw new Error(data.error);
+                }
                 if (data.status === 'Активирован') {
                     showStatus('❌ Этот сертификат уже активирован.', true);
                 } else if (data.status === 'unknown') {
@@ -93,10 +97,15 @@
             btn.disabled = true;
             btn.textContent = 'Активация...';
             try {
-                const response = await fetch(`${apiUrl}?action=activate&code=${encodeURIComponent(code)}`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const url = `${apiUrl}?action=activate&code=${encodeURIComponent(code)}`;
+                const response = await fetch(url, { method: 'GET' });
+                if (!response.ok) {
+                    throw new Error(`Ошибка сервера (${response.status})`);
+                }
                 const data = await response.json();
-                if (data.error) throw new Error(data.error);
+                if (data.error) {
+                    throw new Error(data.error);
+                }
                 if (data.success) {
                     showStatus('✅ ' + data.message, false);
                     btn.classList.add('hidden');
