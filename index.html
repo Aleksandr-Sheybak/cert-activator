@@ -53,8 +53,9 @@
     </div>
 
     <script>
-        // ПОМЕНЯЙТЕ ЭТУ ССЫЛКУ НА ВАШ НОВЫЙ URL, ПОЛУЧЕННЫЙ ПОСЛЕ "НОВОГО РАЗВЁРТЫВАНИЯ"
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbxC_zLvwMynx92yyFjp438BlSorR09bTIPJbLFoNU7tpSpw6rI6LAtexloU2hlo0iK6/exec';
+        // ⚡ ЕДИНСТВЕННОЕ, ЧТО НУЖНО ПОМЕНЯТЬ – ВАШ НОВЫЙ URL ИЗ APPS SCRIPT
+        const apiUrl = 'https://script.google.com/macros/s/AKfycbw1rZR10H1aMnIaoWookX8Oe1wt3g2tqAv5ZBOaqDJq6cK09KK4qzDSwo-4mMZbuG1L/exec';
+        
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
 
@@ -78,11 +79,13 @@
                 } else if (data.status === 'unknown') {
                     showStatus('❌ Неизвестный код сертификата.', true);
                 } else {
+                    // Статус "Не активирован" – показываем кнопку
                     statusDiv.textContent = '';
+                    statusDiv.className = 'status';
                     btn.classList.remove('hidden');
                 }
             } catch (err) {
-                showStatus('Ошибка соединения: ' + err.message, true);
+                showStatus('⚠️ Ошибка соединения: ' + err.message, true);
             }
         }
 
@@ -98,12 +101,12 @@
                     showStatus('✅ ' + data.message, false);
                     btn.classList.add('hidden');
                 } else {
-                    showStatus('❌ ' + (data.message || 'Неизвестная ошибка'), true);
+                    showStatus('❌ ' + (data.message || 'Ошибка активации'), true);
                     btn.disabled = false;
                     btn.textContent = 'Активировать';
                 }
             } catch (err) {
-                showStatus('Ошибка соединения: ' + err.message, true);
+                showStatus('⚠️ Ошибка соединения: ' + err.message, true);
                 btn.disabled = false;
                 btn.textContent = 'Активировать';
             }
