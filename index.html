@@ -53,8 +53,8 @@
     </div>
 
     <script>
-        // ⚡ ВСТАВЬТЕ ВАШ НОВЫЙ URL ЗДЕСЬ
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbw8N5YBU_G-_VIoosdNXRwRXKA7sp0QwLRk6O5sln4DxKM98MKLxd3b9lBWj1I1g7bN/exec';
+        // Вставьте новый URL из Apps Script
+        const apiUrl = 'https://script.google.com/macros/s/AKfycbw_AWzBjYJu9bVw8b6A721HWCZCmZUhGsNg2NY4D7Sj1jM9p8pM1hamvxdkZGeWaU_d/exec';
 
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
@@ -67,46 +67,46 @@
             statusDiv.className = `status ${isError ? 'error' : 'success'}`;
         }
 
-        async function checkStatus() {
-            try {
-                const url = `${apiUrl}?action=status&code=${encodeURIComponent(code)}`;
-                const response = await fetch(url, { method: 'GET' });
-                if (!response.ok) {
-                    throw new Error(`Ошибка сервера (${response.status})`);
-                }
-                const data = await response.json();
+        // JSONP-запрос (без CORS)
+        function jsonp(url, callback) {
+            var script = document.createElement('script');
+            var callbackName = 'jsonp_callback_' + Math.round(Math.random() * 100000);
+            window[callbackName] = function(data) {
+                delete window[callbackName];
+                script.remove();
+                callback(data);
+            };
+            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+            document.body.appendChild(script);
+        }
+
+        function checkStatus() {
+            var url = apiUrl + '?action=status&code=' + encodeURIComponent(code);
+            jsonp(url, function(data) {
                 if (data.error) {
-                    throw new Error(data.error);
-                }
-                if (data.status === 'Активирован') {
+                    showStatus('⚠️ ' + data.error, true);
+                } else if (data.status === 'Активирован') {
                     showStatus('❌ Этот сертификат уже активирован.', true);
                 } else if (data.status === 'unknown') {
                     showStatus('❌ Неизвестный код сертификата.', true);
                 } else {
-                    // Статус "Не активирован" – показываем кнопку
                     statusDiv.textContent = '';
                     statusDiv.className = 'status';
                     btn.classList.remove('hidden');
                 }
-            } catch (err) {
-                showStatus('⚠️ Ошибка соединения: ' + err.message, true);
-            }
+            });
         }
 
-        async function activate() {
+        function activate() {
             btn.disabled = true;
             btn.textContent = 'Активация...';
-            try {
-                const url = `${apiUrl}?action=activate&code=${encodeURIComponent(code)}`;
-                const response = await fetch(url, { method: 'GET' });
-                if (!response.ok) {
-                    throw new Error(`Ошибка сервера (${response.status})`);
-                }
-                const data = await response.json();
+            var url = apiUrl + '?action=activate&code=' + encodeURIComponent(code);
+            jsonp(url, function(data) {
                 if (data.error) {
-                    throw new Error(data.error);
-                }
-                if (data.success) {
+                    showStatus('⚠️ ' + data.error, true);
+                    btn.disabled = false;
+                    btn.textContent = 'Активировать';
+                } else if (data.success) {
                     showStatus('✅ ' + data.message, false);
                     btn.classList.add('hidden');
                 } else {
@@ -114,11 +114,7 @@
                     btn.disabled = false;
                     btn.textContent = 'Активировать';
                 }
-            } catch (err) {
-                showStatus('⚠️ Ошибка соединения: ' + err.message, true);
-                btn.disabled = false;
-                btn.textContent = 'Активировать';
-            }
+            });
         }
 
         if (!code) {
@@ -129,5 +125,7 @@
             checkStatus();
         }
     </script>
+</body>
+</html>
 </body>
 </html>
