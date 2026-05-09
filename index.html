@@ -13,6 +13,8 @@
             min-height: 100vh; padding: 20px;
             -webkit-tap-highlight-color: transparent;
         }
+        .screen { display: none; width: 100%; }
+        .screen.active { display: block; }
         .card {
             background: #1e1e20; border-radius: 24px; box-shadow: 0 12px 36px rgba(0,0,0,0.6);
             padding: 40px 24px 32px; max-width: 100%; width: 100%;
@@ -40,34 +42,168 @@
         button:active { transform: scale(0.97); background: #e58c00; }
         button:disabled { background: #555; color: #2c2c2e; box-shadow: none; }
         .hidden { display: none; }
+        .input-group {
+            margin: 16px 0;
+        }
+        select, input[type="password"] {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 18px;
+            border-radius: 16px;
+            border: 1px solid #2c2c2e;
+            background: #18181a;
+            color: #f0f0f5;
+            outline: none;
+            -webkit-appearance: none;
+            margin-bottom: 8px;
+        }
+        .user-badge {
+            font-size: 14px;
+            color: #a0a0a8;
+            margin-bottom: 12px;
+        }
+        .logout-link {
+            color: #ff9f0a;
+            font-size: 14px;
+            margin-top: 16px;
+            display: inline-block;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="icon">🎁</div>
-        <h2>Активация сертификата</h2>
-        <div class="subtitle">Самоцветы DEV</div>
-        <div class="code-block" id="codeDisplay"></div>
-        <div id="statusArea" class="status"></div>
-        <button id="activateBtn" class="hidden" onclick="activate()">Активировать</button>
+
+    <!-- ЭКРАН ВХОДА -->
+    <div id="loginScreen" class="screen active">
+        <div class="card">
+            <div class="icon">🔐</div>
+            <h2>Вход в систему</h2>
+            <div class="subtitle">Самоцветы DEV</div>
+
+            <div class="input-group">
+                <select id="userSelect">
+                    <option value="root">Root</option>
+                    <option value="volonter1">Volonter1</option>
+                    <option value="volonter2">Volonter2</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <input type="password" id="passwordInput" placeholder="Пароль">
+            </div>
+
+            <button id="loginBtn" onclick="login()">Войти</button>
+            <div id="loginStatus" class="status error" style="margin-top:12px;"></div>
+        </div>
+    </div>
+
+    <!-- ЭКРАН АКТИВАЦИИ -->
+    <div id="mainScreen" class="screen">
+        <div class="card">
+            <div class="icon">🎁</div>
+            <h2>Активация сертификата</h2>
+            <div class="subtitle">Самоцветы DEV</div>
+            <div class="user-badge" id="currentUserLabel"></div>
+
+            <div class="code-block" id="codeDisplay"></div>
+            <div id="statusArea" class="status"></div>
+            <button id="activateBtn" class="hidden" onclick="activate()">Активировать</button>
+
+            <a class="logout-link" href="#" onclick="logout()">Выйти из аккаунта</a>
+        </div>
     </div>
 
     <script>
-        // Вставьте новый URL из Apps Script
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbw_AWzBjYJu9bVw8b6A721HWCZCmZUhGsNg2NY4D7Sj1jM9p8pM1hamvxdkZGeWaU_d/exec';
+        // ---------- НАСТРОЙКИ ----------
+        const apiUrl = 'https://script.google.com/macros/s/ВАШ_НОВЫЙ_URL/exec'; // <-- вставьте ваш URL
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
+        // Учётные данные (в реальном проекте так не делают, но для волонтёров ок)
+        const USERS = {
+            'root': 'space1987',
+            'volonter1': 'v321',
+            'volonter2': 'v987'
+        };
+
+        // ---------- DOM-элементы ----------
+        const loginScreen = document.getElementById('loginScreen');
+        const mainScreen = document.getElementById('mainScreen');
+        const userSelect = document.getElementById('userSelect');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginStatus = document.getElementById('loginStatus');
+        const currentUserLabel = document.getElementById('currentUserLabel');
         const codeDisplay = document.getElementById('codeDisplay');
         const statusDiv = document.getElementById('statusArea');
-        const btn = document.getElementById('activateBtn');
+        const activateBtn = document.getElementById('activateBtn');
 
-        function showStatus(message, isError = true) {
-            statusDiv.textContent = message;
-            statusDiv.className = `status ${isError ? 'error' : 'success'}`;
+        // ---------- ПОЛУЧЕНИЕ КОДА СЕРТИФИКАТА ИЗ URL ----------
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+
+        // ---------- ЛОГИКА СЕССИИ (localStorage) ----------
+        function saveSession(user) {
+            localStorage.setItem('cert_user', user);
+            localStorage.setItem('cert_logged_in', 'true');
         }
 
-        // JSONP-запрос (без CORS)
+        function clearSession() {
+            localStorage.removeItem('cert_user');
+            localStorage.removeItem('cert_logged_in');
+        }
+
+        function getSavedUser() {
+            const loggedIn = localStorage.getItem('cert_logged_in') === 'true';
+            const user = localStorage.getItem('cert_user');
+            return loggedIn && user ? user : null;
+        }
+
+        // ---------- АУТЕНТИФИКАЦИЯ ----------
+        function login() {
+            const user = userSelect.value;
+            const pass = passwordInput.value.trim();
+
+            if (!pass) {
+                loginStatus.textContent = 'Введите пароль';
+                return;
+            }
+
+            if (USERS[user] === pass) {
+                saveSession(user);
+                showMainScreen(user);
+            } else {
+                loginStatus.textContent = 'Неверный пароль';
+                passwordInput.value = '';
+            }
+        }
+
+        function logout() {
+            clearSession();
+            loginScreen.classList.add('active');
+            mainScreen.classList.remove('active');
+            passwordInput.value = '';
+            loginStatus.textContent = '';
+            // Сбрасываем интерфейс активации
+            statusDiv.textContent = '';
+            statusDiv.className = 'status';
+            activateBtn.classList.add('hidden');
+        }
+
+        // ---------- ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ ----------
+        function showMainScreen(user) {
+            loginScreen.classList.remove('active');
+            mainScreen.classList.add('active');
+            currentUserLabel.textContent = 'Вы вошли как: ' + user;
+            // Запускаем проверку статуса сертификата
+            if (!code) {
+                codeDisplay.textContent = '—';
+                showStatus('Нет кода сертификата.', true);
+            } else {
+                codeDisplay.textContent = code;
+                checkStatus();
+            }
+        }
+
+        // ---------- JSONP-ЗАПРОСЫ (без CORS) ----------
         function jsonp(url, callback) {
             var script = document.createElement('script');
             var callbackName = 'jsonp_callback_' + Math.round(Math.random() * 100000);
@@ -80,6 +216,11 @@
             document.body.appendChild(script);
         }
 
+        function showStatus(message, isError = true) {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${isError ? 'error' : 'success'}`;
+        }
+
         function checkStatus() {
             var url = apiUrl + '?action=status&code=' + encodeURIComponent(code);
             jsonp(url, function(data) {
@@ -90,42 +231,46 @@
                 } else if (data.status === 'unknown') {
                     showStatus('❌ Неизвестный код сертификата.', true);
                 } else {
+                    // Статус "Не активирован" – показываем кнопку
                     statusDiv.textContent = '';
                     statusDiv.className = 'status';
-                    btn.classList.remove('hidden');
+                    activateBtn.classList.remove('hidden');
                 }
             });
         }
 
         function activate() {
-            btn.disabled = true;
-            btn.textContent = 'Активация...';
+            activateBtn.disabled = true;
+            activateBtn.textContent = 'Активация...';
             var url = apiUrl + '?action=activate&code=' + encodeURIComponent(code);
             jsonp(url, function(data) {
                 if (data.error) {
                     showStatus('⚠️ ' + data.error, true);
-                    btn.disabled = false;
-                    btn.textContent = 'Активировать';
+                    activateBtn.disabled = false;
+                    activateBtn.textContent = 'Активировать';
                 } else if (data.success) {
                     showStatus('✅ ' + data.message, false);
-                    btn.classList.add('hidden');
+                    activateBtn.classList.add('hidden');
                 } else {
                     showStatus('❌ ' + (data.message || 'Ошибка активации'), true);
-                    btn.disabled = false;
-                    btn.textContent = 'Активировать';
+                    activateBtn.disabled = false;
+                    activateBtn.textContent = 'Активировать';
                 }
             });
         }
 
-        if (!code) {
-            codeDisplay.textContent = '—';
-            showStatus('Нет кода сертификата.', true);
-        } else {
-            codeDisplay.textContent = code;
-            checkStatus();
-        }
+        // ---------- ЗАПУСК ПРИ ЗАГРУЗКЕ ----------
+        (function() {
+            const savedUser = getSavedUser();
+            if (savedUser) {
+                // Уже вошли – сразу на экран активации
+                showMainScreen(savedUser);
+            } else {
+                // Показываем экран входа
+                loginScreen.classList.add('active');
+                mainScreen.classList.remove('active');
+            }
+        })();
     </script>
-</body>
-</html>
 </body>
 </html>
