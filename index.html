@@ -3,75 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Активация сертификата</title>
+    <title>Активация сертификатов</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { width: 100%; height: 100%; background: #121214; -webkit-text-size-adjust: 100%; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            display: flex; align-items: center; justify-content: center;
+            display: flex; flex-direction: column; align-items: center; 
             min-height: 100vh; padding: 20px;
             -webkit-tap-highlight-color: transparent;
+            color: #f0f0f5;
         }
-        .screen { display: none; width: 100%; }
+        /* Навигация */
+        .nav {
+            display: flex; gap: 8px; margin-bottom: 20px;
+            background: #1e1e20; border-radius: 20px; padding: 6px;
+            width: 100%; max-width: 380px;
+        }
+        .nav button {
+            flex: 1; background: transparent; color: #a0a0a8; border: none;
+            padding: 12px 8px; border-radius: 16px; font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: 0.2s;
+        }
+        .nav button.active {
+            background: #ff9f0a; color: #000;
+        }
+        .screen { display: none; width: 100%; max-width: 380px; }
         .screen.active { display: block; }
         .card {
             background: #1e1e20; border-radius: 24px; box-shadow: 0 12px 36px rgba(0,0,0,0.6);
-            padding: 40px 24px 32px; max-width: 100%; width: 100%;
-            text-align: center; border: 1px solid #2c2c2e;
+            padding: 32px 24px; width: 100%; text-align: center; border: 1px solid #2c2c2e;
         }
         .icon { font-size: 48px; margin-bottom: 16px; }
-        h2 { font-size: 26px; font-weight: 650; color: #f0f0f5; margin-bottom: 4px; }
-        .subtitle { font-size: 15px; color: #ff9f0a; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 24px; }
-        .code-block {
+        h2 { font-size: 24px; font-weight: 650; margin-bottom: 4px; }
+        .subtitle { font-size: 14px; color: #ff9f0a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
+        .code-block, input[type="text"] {
             background: #18181a; border: 1px solid #2c2c2e; border-radius: 16px;
-            padding: 18px; margin: 20px 0;
-            font-family: 'SF Mono', monospace; font-size: 24px; font-weight: 600;
-            color: #f0f0f5; word-break: break-all;
+            padding: 16px; margin: 16px 0; font-size: 22px; font-weight: 600;
+            color: #f0f0f5; word-break: break-all; text-align: center;
         }
-        .status { font-size: 18px; margin: 20px 0; font-weight: 500; }
+        input[type="text"] {
+            width: 100%; outline: none;
+        }
+        .status { font-size: 18px; margin: 16px 0; }
         .status.error { color: #ff453a; }
         .status.success { color: #34c759; }
-        button {
-            background: #ff9f0a; color: #000; font-size: 20px; font-weight: 650;
-            padding: 16px 32px; border: none; border-radius: 34px;
-            width: 100%; max-width: 280px; margin-top: 16px;
-            cursor: pointer; transition: 0.15s; box-shadow: 0 6px 20px rgba(255,159,10,0.3);
-            -webkit-appearance: none;
+        button.primary {
+            background: #ff9f0a; color: #000; font-size: 18px; font-weight: 650;
+            padding: 14px 28px; border: none; border-radius: 30px;
+            width: 100%; max-width: 280px; margin: 8px auto; cursor: pointer;
+            box-shadow: 0 4px 14px rgba(255,159,10,0.35); transition: 0.15s;
         }
-        button:active { transform: scale(0.97); background: #e58c00; }
-        button:disabled { background: #555; color: #2c2c2e; box-shadow: none; }
+        button.primary:active { transform: scale(0.97); background: #e58c00; }
+        button.primary:disabled { background: #555; color: #2c2c2e; box-shadow: none; }
+        .danger { background: #ff453a; color: #fff; box-shadow: 0 4px 14px rgba(255,69,58,0.35); }
+        .danger:active { background: #d9362e; }
         .hidden { display: none; }
-        .input-group {
-            margin: 16px 0;
+        .user-badge { font-size: 13px; color: #8e8e93; margin-bottom: 12px; }
+        .logout-link { color: #ff9f0a; font-size: 14px; margin-top: 12px; display: inline-block; text-decoration: none; }
+
+        /* Таблица логов */
+        .logs-table {
+            width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px;
         }
-        select, input[type="password"] {
-            width: 100%;
-            padding: 14px 18px;
-            font-size: 18px;
-            border-radius: 16px;
-            border: 1px solid #2c2c2e;
-            background: #18181a;
-            color: #f0f0f5;
-            outline: none;
-            -webkit-appearance: none;
-            margin-bottom: 8px;
+        .logs-table th {
+            text-align: left; padding: 8px 6px; border-bottom: 1px solid #2c2c2e; color: #8e8e93;
         }
-        .user-badge {
-            font-size: 14px;
-            color: #a0a0a8;
-            margin-bottom: 12px;
-        }
-        .logout-link {
-            color: #ff9f0a;
-            font-size: 14px;
-            margin-top: 16px;
-            display: inline-block;
-            text-decoration: none;
+        .logs-table td {
+            padding: 8px 6px; border-bottom: 1px solid #1c1c1e; vertical-align: top;
         }
     </style>
 </head>
 <body>
+
+    <!-- НАВИГАЦИЯ (только после входа) -->
+    <div id="navBar" class="nav hidden">
+        <button id="navQR" onclick="switchScreen('qr')">📱 QR</button>
+        <button id="navManual" onclick="switchScreen('manual')">⌨️ Ручная</button>
+        <button id="navLogs" onclick="switchScreen('logs')">📋 Логи</button>
+    </div>
 
     <!-- ЭКРАН ВХОДА -->
     <div id="loginScreen" class="screen active">
@@ -79,196 +89,327 @@
             <div class="icon">🔐</div>
             <h2>Вход в систему</h2>
             <div class="subtitle">Самоцветы DEV</div>
-
-            <div class="input-group">
-                <select id="userSelect">
-                    <option value="root">Root</option>
-                    <option value="volonter1">Volonter1</option>
-                    <option value="volonter2">Volonter2</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-                <input type="password" id="passwordInput" placeholder="Пароль">
-            </div>
-
-            <button id="loginBtn" onclick="login()">Войти</button>
-            <div id="loginStatus" class="status error" style="margin-top:12px;"></div>
+            <select id="userSelect" style="width:100%; padding:14px; border-radius:16px; background:#18181a; color:#f0f0f5; border:1px solid #2c2c2e; font-size:16px; margin-bottom:12px;">
+                <option value="root">Root</option>
+                <option value="volonter1">Volonter1</option>
+                <option value="volonter2">Volonter2</option>
+            </select>
+            <input type="password" id="passwordInput" placeholder="Пароль" style="width:100%; padding:14px; border-radius:16px; background:#18181a; color:#f0f0f5; border:1px solid #2c2c2e; font-size:16px; margin-bottom:16px;">
+            <button class="primary" onclick="login()">Войти</button>
+            <div id="loginStatus" class="status error"></div>
         </div>
     </div>
 
-    <!-- ЭКРАН АКТИВАЦИИ -->
-    <div id="mainScreen" class="screen">
+    <!-- ЭКРАН QR-АКТИВАЦИИ -->
+    <div id="qrScreen" class="screen">
         <div class="card">
             <div class="icon">🎁</div>
-            <h2>Активация сертификата</h2>
-            <div class="subtitle">Самоцветы DEV</div>
-            <div class="user-badge" id="currentUserLabel"></div>
-
+            <h2>QR-активация</h2>
+            <div class="user-badge" id="userLabel"></div>
             <div class="code-block" id="codeDisplay"></div>
-            <div id="statusArea" class="status"></div>
-            <button id="activateBtn" class="hidden" onclick="activate()">Активировать</button>
+            <div id="qrStatus" class="status"></div>
+            <button id="activateBtnQR" class="primary" onclick="activateCode('activate')">Активировать</button>
+            <a class="logout-link" href="#" onclick="logout()">Выйти</a>
+        </div>
+    </div>
 
-            <a class="logout-link" href="#" onclick="logout()">Выйти из аккаунта</a>
+    <!-- ЭКРАН РУЧНОЙ АКТИВАЦИИ -->
+    <div id="manualScreen" class="screen">
+        <div class="card">
+            <div class="icon">⌨️</div>
+            <h2>Ручная активация</h2>
+            <div class="user-badge" id="userLabelManual"></div>
+            <input type="text" id="manualCodeInput" placeholder="Код (GF001)">
+            <div id="manualStatus" class="status"></div>
+            <button id="activateBtnManual" class="primary" onclick="manualActivate()">Активировать</button>
+            <button id="deactivateBtnManual" class="primary danger hidden" onclick="manualDeactivate()">Отменить активацию</button>
+            <a class="logout-link" href="#" onclick="logout()">Выйти</a>
+        </div>
+    </div>
+
+    <!-- ЭКРАН ЛОГОВ -->
+    <div id="logsScreen" class="screen">
+        <div class="card" style="padding: 20px;">
+            <h2>📋 Журнал действий</h2>
+            <div id="logsContainer" style="max-height: 400px; overflow-y: auto; margin-top: 12px;">
+                <table class="logs-table" id="logsTable">
+                    <thead><tr><th>Время</th><th>Польз.</th><th>Действие</th><th>Код</th><th>Рез-т</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <button class="primary" style="margin-top:12px;" onclick="loadLogs()">Обновить</button>
+            <a class="logout-link" href="#" onclick="logout()">Выйти</a>
         </div>
     </div>
 
     <script>
-        // ---------- НАСТРОЙКИ ----------
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbw_AWzBjYJu9bVw8b6A721HWCZCmZUhGsNg2NY4D7Sj1jM9p8pM1hamvxdkZGeWaU_d/exec'; // <-- вставьте ваш URL
-
-        // Учётные данные (в реальном проекте так не делают, но для волонтёров ок)
+        // ---------- КОНФИГУРАЦИЯ ----------
+        const apiUrl = 'https://script.google.com/macros/s/ВАШ_API_URL/exec';  // ⚡ вставьте ваш URL
         const USERS = {
             'root': 'space1987',
             'volonter1': 'v321',
             'volonter2': 'v987'
         };
 
-        // ---------- DOM-элементы ----------
+        // ---------- DOM ЭЛЕМЕНТЫ ----------
         const loginScreen = document.getElementById('loginScreen');
-        const mainScreen = document.getElementById('mainScreen');
-        const userSelect = document.getElementById('userSelect');
-        const passwordInput = document.getElementById('passwordInput');
-        const loginBtn = document.getElementById('loginBtn');
-        const loginStatus = document.getElementById('loginStatus');
-        const currentUserLabel = document.getElementById('currentUserLabel');
+        const qrScreen = document.getElementById('qrScreen');
+        const manualScreen = document.getElementById('manualScreen');
+        const logsScreen = document.getElementById('logsScreen');
+        const navBar = document.getElementById('navBar');
+        const navQR = document.getElementById('navQR');
+        const navManual = document.getElementById('navManual');
+        const navLogs = document.getElementById('navLogs');
+        const userLabel = document.getElementById('userLabel');
+        const userLabelManual = document.getElementById('userLabelManual');
         const codeDisplay = document.getElementById('codeDisplay');
-        const statusDiv = document.getElementById('statusArea');
-        const activateBtn = document.getElementById('activateBtn');
+        const qrStatus = document.getElementById('qrStatus');
+        const activateBtnQR = document.getElementById('activateBtnQR');
+        const manualCodeInput = document.getElementById('manualCodeInput');
+        const manualStatus = document.getElementById('manualStatus');
+        const activateBtnManual = document.getElementById('activateBtnManual');
+        const deactivateBtnManual = document.getElementById('deactivateBtnManual');
+        const logsTableBody = document.querySelector('#logsTable tbody');
 
-        // ---------- ПОЛУЧЕНИЕ КОДА СЕРТИФИКАТА ИЗ URL ----------
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
+        let currentUser = null;
 
-        // ---------- ЛОГИКА СЕССИИ (localStorage) ----------
+        // ---------- СЕССИЯ ----------
         function saveSession(user) {
             localStorage.setItem('cert_user', user);
             localStorage.setItem('cert_logged_in', 'true');
         }
-
         function clearSession() {
             localStorage.removeItem('cert_user');
             localStorage.removeItem('cert_logged_in');
         }
-
         function getSavedUser() {
             const loggedIn = localStorage.getItem('cert_logged_in') === 'true';
             const user = localStorage.getItem('cert_user');
             return loggedIn && user ? user : null;
         }
 
-        // ---------- АУТЕНТИФИКАЦИЯ ----------
-        function login() {
-            const user = userSelect.value;
-            const pass = passwordInput.value.trim();
+        // ---------- ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ ----------
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            navQR.classList.remove('active');
+            navManual.classList.remove('active');
+            navLogs.classList.remove('active');
 
-            if (!pass) {
-                loginStatus.textContent = 'Введите пароль';
+            if (screenId === 'qr') {
+                qrScreen.classList.add('active');
+                navQR.classList.add('active');
+                updateQRStatus();
+            } else if (screenId === 'manual') {
+                manualScreen.classList.add('active');
+                navManual.classList.add('active');
+                loadManualCodeStatus();
+            } else if (screenId === 'logs') {
+                logsScreen.classList.add('active');
+                navLogs.classList.add('active');
+                loadLogs();
+            }
+        }
+
+        // ---------- JSONP ЗАПРОСЫ ----------
+        function jsonp(url, callback) {
+            var script = document.createElement('script');
+            var cbName = 'jsonp_cb_' + Math.round(Math.random()*100000);
+            window[cbName] = function(data) {
+                delete window[cbName];
+                script.remove();
+                callback(data);
+            };
+            script.src = url + (url.indexOf('?')>=0 ? '&' : '?') + 'callback=' + cbName;
+            document.body.appendChild(script);
+        }
+
+        // ---------- ВСПОМОГАТЕЛЬНЫЕ ----------
+        function userParam() {
+            return currentUser ? currentUser : 'неизвестный';
+        }
+
+        // ---------- QR ЭКРАН ----------
+        const urlParams = new URLSearchParams(window.location.search);
+        const qrCode = urlParams.get('code');
+
+        function updateQRStatus() {
+            if (!qrCode) {
+                codeDisplay.textContent = '—';
+                qrStatus.textContent = 'Нет кода в ссылке';
+                qrStatus.className = 'status error';
+                activateBtnQR.classList.add('hidden');
                 return;
             }
+            codeDisplay.textContent = qrCode;
+            jsonp(apiUrl + '?action=status&code=' + encodeURIComponent(qrCode), function(data) {
+                if (data.error) {
+                    qrStatus.textContent = '⚠️ ' + data.error;
+                    qrStatus.className = 'status error';
+                    activateBtnQR.classList.add('hidden');
+                } else if (data.status === 'Активирован') {
+                    qrStatus.textContent = '❌ Сертификат уже активирован';
+                    qrStatus.className = 'status error';
+                    activateBtnQR.classList.add('hidden');
+                } else if (data.status === 'unknown') {
+                    qrStatus.textContent = '❌ Неизвестный код';
+                    qrStatus.className = 'status error';
+                    activateBtnQR.classList.add('hidden');
+                } else {
+                    qrStatus.textContent = '';
+                    qrStatus.className = 'status';
+                    activateBtnQR.classList.remove('hidden');
+                }
+            });
+        }
 
+        function activateCode() {
+            if (!qrCode) return;
+            activateBtnQR.disabled = true;
+            activateBtnQR.textContent = 'Активация...';
+            jsonp(apiUrl + '?action=activate&code=' + encodeURIComponent(qrCode) + '&user=' + encodeURIComponent(userParam()), function(data) {
+                if (data.success) {
+                    qrStatus.textContent = '✅ ' + data.message;
+                    qrStatus.className = 'status success';
+                    activateBtnQR.classList.add('hidden');
+                } else {
+                    qrStatus.textContent = '❌ ' + data.message;
+                    qrStatus.className = 'status error';
+                    activateBtnQR.disabled = false;
+                    activateBtnQR.textContent = 'Активировать';
+                }
+            });
+        }
+
+        // ---------- РУЧНАЯ АКТИВАЦИЯ ----------
+        function manualActivate() {
+            var code = manualCodeInput.value.trim().replace(/[^A-Za-z0-9]/g, '');
+            if (!code) { manualStatus.textContent = 'Введите код'; manualStatus.className = 'status error'; return; }
+            activateBtnManual.disabled = true;
+            deactivateBtnManual.disabled = true;
+            jsonp(apiUrl + '?action=activate&code=' + code + '&user=' + encodeURIComponent(userParam()), function(data) {
+                if (data.success) {
+                    manualStatus.textContent = '✅ ' + data.message;
+                    manualStatus.className = 'status success';
+                    activateBtnManual.classList.add('hidden');
+                    deactivateBtnManual.classList.remove('hidden');
+                } else {
+                    manualStatus.textContent = '❌ ' + data.message;
+                    manualStatus.className = 'status error';
+                    activateBtnManual.disabled = false;
+                    deactivateBtnManual.disabled = false;
+                }
+            });
+        }
+
+        function manualDeactivate() {
+            var code = manualCodeInput.value.trim().replace(/[^A-Za-z0-9]/g, '');
+            if (!code) return;
+            activateBtnManual.disabled = true;
+            deactivateBtnManual.disabled = true;
+            jsonp(apiUrl + '?action=deactivate&code=' + code + '&user=' + encodeURIComponent(userParam()), function(data) {
+                if (data.success) {
+                    manualStatus.textContent = '✅ ' + data.message;
+                    manualStatus.className = 'status success';
+                    deactivateBtnManual.classList.add('hidden');
+                    activateBtnManual.classList.remove('hidden');
+                } else {
+                    manualStatus.textContent = '❌ ' + data.message;
+                    manualStatus.className = 'status error';
+                    activateBtnManual.disabled = false;
+                    deactivateBtnManual.disabled = false;
+                }
+            });
+        }
+
+        function loadManualCodeStatus() {
+            var code = manualCodeInput.value.trim().replace(/[^A-Za-z0-9]/g, '');
+            if (!code) {
+                manualStatus.textContent = '';
+                activateBtnManual.classList.remove('hidden');
+                deactivateBtnManual.classList.add('hidden');
+                return;
+            }
+            jsonp(apiUrl + '?action=status&code=' + code, function(data) {
+                if (data.status === 'Активирован') {
+                    activateBtnManual.classList.add('hidden');
+                    deactivateBtnManual.classList.remove('hidden');
+                    manualStatus.textContent = '';
+                } else {
+                    activateBtnManual.classList.remove('hidden');
+                    deactivateBtnManual.classList.add('hidden');
+                    manualStatus.textContent = '';
+                }
+                activateBtnManual.disabled = false;
+                deactivateBtnManual.disabled = false;
+            });
+        }
+        manualCodeInput.addEventListener('input', loadManualCodeStatus);
+
+        // ---------- ЛОГИ ----------
+        function loadLogs() {
+            jsonp(apiUrl + '?action=logs', function(data) {
+                if (data.error) return;
+                var logs = data.logs || [];
+                logsTableBody.innerHTML = '';
+                logs.forEach(function(row) {
+                    var tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${row[0] || ''}</td><td>${row[1] || ''}</td><td>${row[2] || ''}</td><td>${row[3] || ''}</td><td>${row[4] || ''}</td>`;
+                    logsTableBody.appendChild(tr);
+                });
+            });
+        }
+
+        // ---------- АУТЕНТИФИКАЦИЯ ----------
+        function login() {
+            var user = document.getElementById('userSelect').value;
+            var pass = document.getElementById('passwordInput').value.trim();
+            if (!pass) {
+                document.getElementById('loginStatus').textContent = 'Введите пароль';
+                return;
+            }
             if (USERS[user] === pass) {
+                currentUser = user;
                 saveSession(user);
-                showMainScreen(user);
+                showMainInterface();
             } else {
-                loginStatus.textContent = 'Неверный пароль';
-                passwordInput.value = '';
+                document.getElementById('loginStatus').textContent = 'Неверный пароль';
             }
         }
 
         function logout() {
             clearSession();
+            currentUser = null;
             loginScreen.classList.add('active');
-            mainScreen.classList.remove('active');
-            passwordInput.value = '';
-            loginStatus.textContent = '';
-            // Сбрасываем интерфейс активации
-            statusDiv.textContent = '';
-            statusDiv.className = 'status';
-            activateBtn.classList.add('hidden');
+            navBar.classList.add('hidden');
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('loginStatus').textContent = '';
         }
 
-        // ---------- ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ ----------
-        function showMainScreen(user) {
+        function showMainInterface() {
             loginScreen.classList.remove('active');
-            mainScreen.classList.add('active');
-            currentUserLabel.textContent = 'Вы вошли как: ' + user;
-            // Запускаем проверку статуса сертификата
-            if (!code) {
-                codeDisplay.textContent = '—';
-                showStatus('Нет кода сертификата.', true);
+            navBar.classList.remove('hidden');
+            userLabel.textContent = 'Вы: ' + currentUser;
+            userLabelManual.textContent = 'Вы: ' + currentUser;
+            // Показать кнопку отмены только для Root
+            if (currentUser === 'root') {
+                deactivateBtnManual.classList.remove('hidden'); // видимость, но ещё зависит от статуса
             } else {
-                codeDisplay.textContent = code;
-                checkStatus();
+                deactivateBtnManual.classList.add('hidden');
             }
+            switchScreen('qr');
+            if (qrCode) updateQRStatus();
         }
 
-        // ---------- JSONP-ЗАПРОСЫ (без CORS) ----------
-        function jsonp(url, callback) {
-            var script = document.createElement('script');
-            var callbackName = 'jsonp_callback_' + Math.round(Math.random() * 100000);
-            window[callbackName] = function(data) {
-                delete window[callbackName];
-                script.remove();
-                callback(data);
-            };
-            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
-            document.body.appendChild(script);
-        }
-
-        function showStatus(message, isError = true) {
-            statusDiv.textContent = message;
-            statusDiv.className = `status ${isError ? 'error' : 'success'}`;
-        }
-
-        function checkStatus() {
-            var url = apiUrl + '?action=status&code=' + encodeURIComponent(code);
-            jsonp(url, function(data) {
-                if (data.error) {
-                    showStatus('⚠️ ' + data.error, true);
-                } else if (data.status === 'Активирован') {
-                    showStatus('❌ Этот сертификат уже активирован.', true);
-                } else if (data.status === 'unknown') {
-                    showStatus('❌ Неизвестный код сертификата.', true);
-                } else {
-                    // Статус "Не активирован" – показываем кнопку
-                    statusDiv.textContent = '';
-                    statusDiv.className = 'status';
-                    activateBtn.classList.remove('hidden');
-                }
-            });
-        }
-
-        function activate() {
-            activateBtn.disabled = true;
-            activateBtn.textContent = 'Активация...';
-            var url = apiUrl + '?action=activate&code=' + encodeURIComponent(code);
-            jsonp(url, function(data) {
-                if (data.error) {
-                    showStatus('⚠️ ' + data.error, true);
-                    activateBtn.disabled = false;
-                    activateBtn.textContent = 'Активировать';
-                } else if (data.success) {
-                    showStatus('✅ ' + data.message, false);
-                    activateBtn.classList.add('hidden');
-                } else {
-                    showStatus('❌ ' + (data.message || 'Ошибка активации'), true);
-                    activateBtn.disabled = false;
-                    activateBtn.textContent = 'Активировать';
-                }
-            });
-        }
-
-        // ---------- ЗАПУСК ПРИ ЗАГРУЗКЕ ----------
+        // ---------- ИНИЦИАЛИЗАЦИЯ ----------
         (function() {
-            const savedUser = getSavedUser();
-            if (savedUser) {
-                // Уже вошли – сразу на экран активации
-                showMainScreen(savedUser);
+            var savedUser = getSavedUser();
+            if (savedUser && USERS.hasOwnProperty(savedUser)) {
+                currentUser = savedUser;
+                showMainInterface();
             } else {
-                // Показываем экран входа
                 loginScreen.classList.add('active');
-                mainScreen.classList.remove('active');
+                navBar.classList.add('hidden');
             }
         })();
     </script>
