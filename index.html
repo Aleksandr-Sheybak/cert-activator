@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Самоцветы DEV – Сертификаты</title>
+    <!-- Библиотека для сканирования QR-кодов -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { width: 100%; height: 100%; -webkit-text-size-adjust: 100%; }
@@ -19,7 +21,6 @@
                         center/cover fixed;
         }
 
-        /* Навигация */
         .nav {
             display: flex; gap: 6px; margin-bottom: 20px;
             background: rgba(30,30,32,0.8); backdrop-filter: blur(10px);
@@ -102,7 +103,7 @@
 
         .scrollable { max-height: 400px; overflow-y: auto; margin-top: 8px; }
 
-        /* Модальное окно */
+        /* Модальные окна */
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); display: flex; align-items: center;
@@ -111,9 +112,17 @@
         .modal-content {
             background: #1e1e20; border-radius: 24px; padding: 24px;
             width: 90%; max-width: 320px; text-align: center;
+            position: relative;
         }
         .close-btn {
-            color: #ff9f0a; font-size: 24px; cursor: pointer; float: right;
+            color: #ff9f0a; font-size: 24px; cursor: pointer; position: absolute;
+            top: 10px; right: 15px;
+        }
+        video, canvas {
+            width: 100%; border-radius: 16px; margin: 10px 0;
+        }
+        .file-input {
+            display: none;
         }
     </style>
 </head>
@@ -153,6 +162,10 @@
             <div class="code-block" id="codeDisplay"></div>
             <div id="qrStatus" class="status"></div>
             <button id="activateBtnQR" class="primary" onclick="activateCode()">Активировать</button>
+            <div style="margin-top:12px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+                <button class="primary" style="width:auto; padding:10px 16px; font-size:14px;" onclick="openScanner()">📷 Сканировать камерой</button>
+                <button class="primary" style="width:auto; padding:10px 16px; font-size:14px;" onclick="openGallery()">🖼️ Загрузить из галереи</button>
+            </div>
             <a class="logout-link" href="#" onclick="logout()">Выйти</a>
         </div>
     </div>
@@ -193,13 +206,10 @@
             <img class="logo" src="https://sun9-52.userapi.com/s/v1/ig2/FU7bN5q2jKV6WvIw1MQODNfSCOpVecMzuP5FQdOyrofQcIcs-bIRdAjlPtoHyuC1uVQI4rGjL04epRK863qokx-Q.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&cs=1024x0" alt="Логотип">
             <h2>💎 Все сертификаты</h2>
             <div class="user-badge" id="userLabelCerts"></div>
-
-            <!-- Кнопка создания нового -->
             <button class="primary" onclick="openCreateModal()" style="margin-bottom:16px;">➕ Создать новый сертификат</button>
-
             <div class="scrollable">
                 <table class="data-table" id="certsTable">
-                    <thead><tr><th>Код</th><th>Статус</th><th>Создан</th><th>Срок</th><th>Комментарий</th><th>QR</th><th>Откат</th></tr></thead>
+                    <thead><tr><th>Код</th><th>Статус</th><th>Создан</th><th>Срок</th><th>Комментарий</th><th>QR</th><th>Скачать</th><th>Откат</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -208,7 +218,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно создания сертификата -->
+    <!-- МОДАЛЬНОЕ ОКНО СОЗДАНИЯ СЕРТИФИКАТА -->
     <div id="createModal" class="modal hidden">
         <div class="modal-content">
             <span class="close-btn" onclick="closeCreateModal()">&times;</span>
@@ -227,7 +237,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно для QR-кода -->
+    <!-- МОДАЛЬНОЕ ОКНО ДЛЯ QR-КОДА -->
     <div id="qrModal" class="modal hidden">
         <div class="modal-content">
             <span class="close-btn" onclick="closeQrModal()">&times;</span>
@@ -239,9 +249,23 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНОЕ ОКНО СКАНЕРА QR-КОДОВ -->
+    <div id="scannerModal" class="modal hidden">
+        <div class="modal-content" style="max-width: 360px; padding: 16px;">
+            <span class="close-btn" onclick="closeScanner()">&times;</span>
+            <h3>Сканирование QR-кода</h3>
+            <video id="scannerVideo" autoplay playsinline></video>
+            <p id="scannerStatus" style="color:#a0a0a8; font-size:14px;">Наведите камеру на код</p>
+            <button class="primary" onclick="closeScanner()" style="margin-top:8px;">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Скрытый input для загрузки из галереи -->
+    <input type="file" id="galleryInput" class="file-input" accept="image/*" onchange="handleFileUpload(event)">
+
     <script>
         // ---------- КОНФИГУРАЦИЯ ----------
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbzJW6NciF-3_ZFNmqI7BbWXZ3bPqjAMKKZ_gIC9S_CIIh0PCBUaBcdltR6iLwCtwbUy/exec'; // ⚡ ВСТАВЬТЕ ВАШ URL Apps Script
+        const apiUrl = 'ВАШ_API_URL';          // ⚡ ВСТАВЬТЕ ВАШ URL Apps Script
 
         const USERS = {
             'root': 'space1987',
@@ -274,11 +298,16 @@
         const certsTableBody = document.querySelector('#certsTable tbody');
         const createModal = document.getElementById('createModal');
         const qrModal = document.getElementById('qrModal');
+        const scannerModal = document.getElementById('scannerModal');
+        const scannerVideo = document.getElementById('scannerVideo');
+        const scannerStatus = document.getElementById('scannerStatus');
+        const galleryInput = document.getElementById('galleryInput');
         const qrImage = document.getElementById('qrImage');
         const qrCodeTitle = document.getElementById('qrCodeTitle');
         const qrLink = document.getElementById('qrLink');
 
         let currentUser = null;
+        let scanningActive = false;   // флаг для остановки сканирования
 
         // ---------- СЕССИЯ ----------
         function saveSession(user) { localStorage.setItem('cert_user', user); localStorage.setItem('cert_logged_in', 'true'); }
@@ -319,12 +348,13 @@
 
         // ---------- QR ЭКРАН ----------
         const urlParams = new URLSearchParams(window.location.search);
-        const qrCode = urlParams.get('code');
+        var qrCode = urlParams.get('code');   // важно: let, так как можем изменить при сканировании
 
         function updateQRStatus() {
+            qrCode = urlParams.get('code') || (codeDisplay.innerText !== '—' ? codeDisplay.innerText : null);
             if (!qrCode) {
                 codeDisplay.textContent = '—';
-                qrStatus.textContent = 'Нет кода в ссылке'; qrStatus.className = 'status error';
+                qrStatus.textContent = 'Ожидание кода'; qrStatus.className = 'status';
                 activateBtnQR.classList.add('hidden'); return;
             }
             codeDisplay.textContent = qrCode;
@@ -342,6 +372,12 @@
             });
         }
 
+        function setQrCodeFromScanner(code) {
+            qrCode = code;
+            codeDisplay.textContent = qrCode;
+            updateQRStatus();
+        }
+
         function activateCode() {
             if (!qrCode) return;
             activateBtnQR.disabled = true; activateBtnQR.textContent = 'Активация...';
@@ -356,7 +392,89 @@
             });
         }
 
-        // ---------- РУЧНАЯ АКТИВАЦИЯ ----------
+        // ---------- СКАНЕР QR-КОДОВ ----------
+        function openScanner() {
+            if (!jsQR) {
+                alert('Библиотека сканирования не загружена. Проверьте интернет.');
+                return;
+            }
+            scannerModal.classList.remove('hidden');
+            scanningActive = true;
+            scannerStatus.textContent = 'Запуск камеры...';
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(stream => {
+                    scannerVideo.srcObject = stream;
+                    scannerVideo.play();
+                    scannerStatus.textContent = 'Наведите камеру на QR-код';
+                    requestAnimationFrame(scanLoop);
+                })
+                .catch(err => {
+                    scannerStatus.textContent = 'Ошибка доступа к камере';
+                    console.error(err);
+                });
+        }
+
+        function scanLoop() {
+            if (!scanningActive) return;
+            if (scannerVideo.readyState === scannerVideo.HAVE_ENOUGH_DATA) {
+                const canvas = document.createElement('canvas');
+                canvas.width = scannerVideo.videoWidth;
+                canvas.height = scannerVideo.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(scannerVideo, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, canvas.width, canvas.height);
+                if (code) {
+                    scanningActive = false;
+                    closeScanner();
+                    setQrCodeFromScanner(code.data);
+                    return;
+                }
+            }
+            requestAnimationFrame(scanLoop);
+        }
+
+        function closeScanner() {
+            scanningActive = false;
+            if (scannerVideo.srcObject) {
+                scannerVideo.srcObject.getTracks().forEach(track => track.stop());
+            }
+            scannerModal.classList.add('hidden');
+        }
+
+        // ---------- ЗАГРУЗКА ИЗ ГАЛЕРЕИ ----------
+        function openGallery() {
+            galleryInput.click();
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, canvas.width, canvas.height);
+                    if (code) {
+                        setQrCodeFromScanner(code.data);
+                    } else {
+                        alert('QR-код не найден на изображении.');
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            // сброс input, чтобы можно было загрузить тот же файл повторно
+            galleryInput.value = '';
+        }
+
+        // ---------- РУЧНАЯ АКТИВАЦИЯ (без изменений) ----------
         function manualActivate() {
             var code = manualCodeInput.value.trim().replace(/[^A-Za-z0-9]/g, '');
             if (!code) { manualStatus.textContent = 'Введите код'; manualStatus.className = 'status error'; return; }
@@ -406,7 +524,7 @@
         }
         manualCodeInput.addEventListener('input', loadManualCodeStatus);
 
-        // ---------- ЛОГИ ----------
+        // ---------- ЛОГИ (без изменений, но оставлено) ----------
         function loadLogs() {
             jsonp(apiUrl + '?action=logs', function(data) {
                 if (data.error) return;
@@ -420,7 +538,7 @@
             });
         }
 
-        // ---------- УПРАВЛЕНИЕ СЕРТИФИКАТАМИ ----------
+        // ---------- УПРАВЛЕНИЕ СЕРТИФИКАТАМИ (добавлена колонка «Скачать») ----------
         function loadCertificates() {
             jsonp(apiUrl + '?action=list', function(data) {
                 if (data.error) return;
@@ -433,6 +551,9 @@
                         ? `<button class="primary danger" style="padding:4px 10px; font-size:12px; width:auto;" onclick="rollbackCertificate('${item.code}')">↩️</button>`
                         : '—';
                     var qrBtn = `<button class="primary" style="padding:4px 10px; font-size:12px; width:auto;" onclick="showQrCode('${item.code}')">📷</button>`;
+                    var downloadBtn = (currentUser === 'root') 
+                        ? `<button class="primary" style="padding:4px 10px; font-size:12px; width:auto;" onclick="downloadCertificate('${item.code}')">⬇️</button>`
+                        : '—';
                     tr.innerHTML = `
                         <td><strong>${item.code}</strong></td>
                         <td><span class="status-badge ${statusClass}">${item.status}</span></td>
@@ -440,6 +561,7 @@
                         <td>${item.duration}</td>
                         <td>${item.comment}</td>
                         <td>${qrBtn}</td>
+                        <td>${downloadBtn}</td>
                         <td>${rollbackBtn}</td>
                     `;
                     certsTableBody.appendChild(tr);
@@ -460,7 +582,52 @@
             });
         }
 
-        // ---------- МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ----------
+        // ---------- ГЕНЕРАЦИЯ И СКАЧИВАНИЕ СЕРТИФИКАТА ----------
+        function downloadCertificate(code) {
+            const baseUrl = window.location.href.split('?')[0];
+            const activationUrl = baseUrl + '?code=' + code;
+            const qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(activationUrl);
+
+            // Создаём canvas для будущего сертификата
+            const canvas = document.createElement('canvas');
+            canvas.width = 600;
+            canvas.height = 400;
+            const ctx = canvas.getContext('2d');
+
+            // Белый фон
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Загружаем QR-код
+            const qrImg = new Image();
+            qrImg.crossOrigin = 'Anonymous';
+            qrImg.onload = function() {
+                // Рисуем QR-код
+                ctx.drawImage(qrImg, canvas.width - 220, canvas.height - 220, 200, 200);
+
+                // Текст сертификата
+                ctx.fillStyle = '#000000';
+                ctx.font = 'bold 24px Arial';
+                ctx.fillText('Подарочный сертификат', 20, 50);
+                ctx.font = '18px Arial';
+                ctx.fillText('Код: ' + code, 20, 90);
+                ctx.font = '14px Arial';
+                ctx.fillText('Предъявите этот QR-код для активации', 20, 120);
+                ctx.fillText('Самоцветы DEV', 20, canvas.height - 30);
+
+                // Скачивание
+                const link = document.createElement('a');
+                link.download = 'certificate_' + code + '.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            };
+            qrImg.onerror = function() {
+                alert('Не удалось загрузить QR-код. Проверьте доступ к api.qrserver.com');
+            };
+            qrImg.src = qrApiUrl;
+        }
+
+        // ---------- МОДАЛЬНЫЕ ОКНА (создание, QR-просмотр) ----------
         function openCreateModal() {
             document.getElementById('newCode').value = '';
             document.getElementById('newDuration').value = 'бессрочно';
@@ -494,7 +661,7 @@
                     if (data.success) {
                         document.getElementById('createStatus').textContent = '✅ ' + data.message;
                         document.getElementById('createStatus').className = 'status success';
-                        loadCertificates(); // обновить список
+                        loadCertificates();
                         setTimeout(closeCreateModal, 1000);
                     } else {
                         document.getElementById('createStatus').textContent = '❌ ' + data.message;
@@ -503,9 +670,8 @@
                 });
         }
 
-        // ---------- QR-КОД В МОДАЛЬНОМ ОКНЕ ----------
         function showQrCode(code) {
-            var baseUrl = window.location.href.split('?')[0]; // текущий URL без параметров
+            var baseUrl = window.location.href.split('?')[0];
             var activationUrl = baseUrl + '?code=' + code;
             qrCodeTitle.textContent = 'QR-код для ' + code;
             qrImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(activationUrl);
@@ -538,6 +704,7 @@
         }
 
         function logout() {
+            closeScanner(); // остановить камеру при выходе
             clearSession(); currentUser = null;
             loginScreen.classList.add('active'); navBar.classList.add('hidden');
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
