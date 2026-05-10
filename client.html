@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Мои сертификаты</title>
+    <style>
+        /* Лаконичный тёмный стиль, похожий на админку, но без бокового меню */
+        body { background: #121214; color: #fff; font-family: Arial, sans-serif; padding: 20px; }
+        .card { background: #1c1c1e; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #fff; }
+        button { background: #ff9f0a; color: #000; font-weight: bold; cursor: pointer; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 10px; font-size: 13px; }
+        .badge-active { background: #34c759; }
+        .badge-inactive { background: #48484a; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 8px; border-bottom: 1px solid #2c2c2e; text-align: left; }
+    </style>
+</head>
+<body>
+    <!-- Экран входа/регистрации -->
+    <div id="authScreen">
+        <div class="card">
+            <h2>Вход</h2>
+            <input type="text" id="loginInput" placeholder="Логин (телефон или email)">
+            <input type="password" id="passwordInput" placeholder="Пароль">
+            <button onclick="login()">Войти</button>
+            <p style="margin-top:10px;">Нет аккаунта? <a href="#" onclick="showRegister()">Зарегистрироваться</a></p>
+            <div id="authStatus" style="color:red;"></div>
+        </div>
+        <div class="card hidden" id="registerCard">
+            <h2>Регистрация</h2>
+            <input type="text" id="regPhone" placeholder="Телефон (будет логином)">
+            <input type="email" id="regEmail" placeholder="Email">
+            <input type="text" id="regFIO" placeholder="ФИО">
+            <input type="password" id="regPassword" placeholder="Придумайте пароль">
+            <button onclick="register()">Зарегистрироваться</button>
+            <button onclick="showLogin()" style="background:#444; color:#fff;">Назад</button>
+            <div id="regStatus" style="color:red;"></div>
+        </div>
+    </div>
+
+    <!-- Личный кабинет (скрыт до входа) -->
+    <div id="cabinetScreen" class="hidden">
+        <div class="card">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img id="avatarImg" src="" style="width:48px; height:48px; border-radius:50%; background:#333;">
+                <div>
+                    <strong id="nicknameDisplay"></strong>
+                    <p id="fioDisplay" style="margin:0; color:#aaa;"></p>
+                </div>
+                <button onclick="editProfile()" style="width:auto; margin-left:auto;">✏️</button>
+                <button onclick="logout()" style="width:auto; background:#444; color:#fff;">Выйти</button>
+            </div>
+        </div>
+        <div class="card">
+            <h3>Мои сертификаты</h3>
+            <table id="myCertsTable">
+                <thead><tr><th>Код</th><th>Статус</th><th>Действие</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="card">
+            <h3>Активированные</h3>
+            <table id="myUsedCertsTable">
+                <thead><tr><th>Код</th><th>Дата создания</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = 'https://script.google.com/macros/s/AKfycbw_fbUqTcfpcpfBjciSwMPd50yFAC_EKr7_LSTCdofk6tI9Cja-c-RgvGu5Ll8kuE3C/exec';   // <-- замените на свой
+        let currentClient = null;
+
+        function show(id) { document.getElementById(id).classList.remove('hidden'); }
+        function hide(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function jsonp(url, callback) {
+            var script = document.createElement('script');
+            var cb = 'jp_' + Math.random().toString(36).substr(2, 9);
+            window[cb] = function(d) { delete window[cb]; script.remove(); callback(d); };
+            script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
+            document.body.appendChild(script);
+        }
+
+        // Вход
+        function login() {
+            const login = document.getElementById('loginInput').value.trim();
+            const pass = document.getElementById('passwordInput').value.trim();
+            if (!login || !pass) return;
+            jsonp(apiUrl + '?action=login&user=' + encodeURIComponent(login) + '&password=' + encodeURIComponent(pass), function(d) {
+                if (d.success && d.rights === 'client') {
+                    currentClient = login;
+                    localStorage.setItem('client_login', login);
+                    localStorage.setItem('client_pass', pass);
+                    showCabinet();
+                } else {
+                    document.getElementById('authStatus').textContent = 'Неверный логин или пароль';
+                }
+            });
+        }
+
+        function showRegister() { hide('authScreen'); show('registerCard'); }
+        function showLogin() { show('authScreen'); hide('registerCard'); }
+
+        function register() {
+            const phone = document.getElementById('regPhone').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const fio = document.getElementById('regFIO').value.trim();
+            const pass = document.getElementById('regPassword').value.trim();
+            if (!phone || !pass) return alert('Телефон и пароль обязательны');
+            jsonp(apiUrl + '?action=clientRegister&login=' + encodeURIComponent(phone) +
+                 '&password=' + encodeURIComponent(pass) +
+                 '&phone=' + encodeURIComponent(phone) +
+                 '&email=' + encodeURIComponent(email) +
+                 '&fio=' + encodeURIComponent(fio), function(d) {
+                if (d.success) {
+                    alert('Регистрация успешна! Теперь войдите.');
+                    showLogin();
+                } else {
+                    document.getElementById('regStatus').textContent = d.message;
+                }
+            });
+        }
+
+        function showCabinet() {
+            hide('authScreen');
+            show('cabinetScreen');
+            loadProfile();
+            loadMyCerts();
+            loadUsedCerts();
+        }
+
+        function loadProfile() {
+            jsonp(apiUrl + '?action=clientData&user=' + encodeURIComponent(currentClient), function(d) {
+                if (d.fio) document.getElementById('fioDisplay').textContent = d.fio;
+                document.getElementById('nicknameDisplay').textContent = d.nickname || 'Пользователь';
+                if (d.avatar) document.getElementById('avatarImg').src = d.avatar;
+            });
+        }
+
+        function loadMyCerts() {
+            jsonp(apiUrl + '?action=clientCerts&user=' + encodeURIComponent(currentClient), function(d) {
+                const tbody = document.querySelector('#myCertsTable tbody');
+                tbody.innerHTML = '';
+                (d.codes || []).filter(c => c.status !== 'Активирован').forEach(c => {
+                    tbody.innerHTML += `<tr>
+                        <td><strong>${c.code}</strong></td>
+                        <td><span class="badge badge-inactive">Не активирован</span></td>
+                        <td><button onclick="showQr('${c.code}')">QR</button></td>
+                    </tr>`;
+                });
+            });
+        }
+
+        function loadUsedCerts() {
+            jsonp(apiUrl + '?action=clientCerts&user=' + encodeURIComponent(currentClient), function(d) {
+                const tbody = document.querySelector('#myUsedCertsTable tbody');
+                tbody.innerHTML = '';
+                (d.codes || []).filter(c => c.status === 'Активирован').forEach(c => {
+                    tbody.innerHTML += `<tr><td><strong>${c.code}</strong></td><td>${c.date}</td></tr>`;
+                });
+            });
+        }
+
+        function showQr(code) {
+            const url = window.location.origin + window.location.pathname.replace('client.html','index.html') + '?code=' + code;
+            window.open(url, '_blank');
+        }
+
+        function editProfile() {
+            const nick = prompt('Никнейм:', document.getElementById('nicknameDisplay').textContent);
+            const avatar = prompt('Ссылка на аватар:', document.getElementById('avatarImg').src);
+            if (nick === null && avatar === null) return;
+            jsonp(apiUrl + '?action=clientUpdate&user=' + encodeURIComponent(currentClient) +
+                 '&nickname=' + encodeURIComponent(nick || '') +
+                 '&avatar=' + encodeURIComponent(avatar || ''), function(d) {
+                if (d.success) {
+                    loadProfile();
+                } else alert(d.message);
+            });
+        }
+
+        function logout() {
+            currentClient = null;
+            localStorage.removeItem('client_login');
+            localStorage.removeItem('client_pass');
+            hide('cabinetScreen');
+            show('authScreen');
+        }
+
+        // Автовход
+        (function() {
+            const savedLogin = localStorage.getItem('client_login');
+            const savedPass = localStorage.getItem('client_pass');
+            if (savedLogin && savedPass) {
+                jsonp(apiUrl + '?action=login&user=' + encodeURIComponent(savedLogin) + '&password=' + encodeURIComponent(savedPass), function(d) {
+                    if (d.success && d.rights === 'client') {
+                        currentClient = savedLogin;
+                        showCabinet();
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
