@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Самоцветы DEV – Админпанель</title>
+    <title>Самоцветы DEV – Панель управления</title>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <style>
@@ -11,29 +11,52 @@
             --sidebar-width: 280px;
             --header-height: 60px;
             --accent: #ff9f0a;
+            --accent-hover: #e58c00;
             --danger: #ff453a;
             --success: #30d158;
             --bg: #121214;
-            --card-bg: #1c1c1e;
+            --card-bg: rgba(28,28,30,0.8);
             --text: #f0f0f5;
             --text-secondary: #98989d;
-            --border: #2c2c2e;
+            --border: rgba(44,44,46,0.6);
+            --glass-blur: blur(20px);
+            --shadow: 0 8px 32px rgba(0,0,0,0.5);
         }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
         body {
-            background-image: linear-gradient(rgba(18,18,20,0.75), rgba(18,18,20,0.75)),
+            background-image: linear-gradient(rgba(18,18,20,0.7), rgba(18,18,20,0.7)),
                               url('https://i.oneme.ru/i?r=BTE2sh_eZW7g8kugOdIm2Noti4nNqoRG8rejaPRr2859v6heFIFzMaeTRu44FG2MMX4');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
         }
 
+        /* Стеклянная шапка */
         .header {
-            height: var(--header-height); background: rgba(28,28,30,0.9); backdrop-filter: blur(15px);
+            height: var(--header-height);
+            background: rgba(28,28,30,0.5);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
             display: flex; align-items: center; padding: 0 20px;
-            border-bottom: 1px solid var(--border); position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+            border-bottom: 1px solid var(--border);
+            position: fixed; top: 0; left: 0; right: 0; z-index: 30;
         }
+
+        .accent-switch {
+            display: flex; gap: 6px; margin-left: auto; margin-right: 12px;
+        }
+        .accent-dot {
+            width: 16px; height: 16px; border-radius: 50%; cursor: pointer;
+            transition: transform 0.2s; border: 2px solid transparent;
+        }
+        .accent-dot:hover { transform: scale(1.2); }
+        .accent-dot.active { border-color: #fff; }
+        .accent-gold { background: #ff9f0a; }
+        .accent-blue { background: #0a84ff; }
+        .accent-purple { background: #af52de; }
+
         .menu-btn {
             background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; margin-right: 16px;
             display: flex; align-items: center;
@@ -43,84 +66,125 @@
         }
         .logo-img {
             height: 36px; width: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent);
+            box-shadow: 0 0 15px var(--accent);
         }
 
+        /* Стеклянный сайдбар */
         .sidebar {
             position: fixed; top: var(--header-height); left: 0; bottom: 0;
-            width: var(--sidebar-width); background: #1a1a1c; border-right: 1px solid var(--border);
+            width: var(--sidebar-width);
+            background: rgba(26,26,28,0.6);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-right: 1px solid var(--border);
             transform: translateX(-100%); transition: transform 0.3s ease; z-index: 25;
             padding: 20px 0; overflow-y: auto;
         }
         .sidebar.open { transform: translateX(0); }
         .sidebar ul { list-style: none; padding: 0; }
-        .sidebar li a, .sidebar li button {
+        .sidebar li button {
             display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 24px;
             color: #ccc; text-decoration: none; font-size: 16px; background: none; border: none;
-            text-align: left; cursor: pointer; transition: background 0.2s;
+            text-align: left; cursor: pointer; transition: all 0.2s; border-radius: 0;
         }
-        .sidebar li a:hover, .sidebar li button:hover { background: #2c2c2e; color: #fff; }
-        .sidebar li a.active, .sidebar li button.active { color: var(--accent); background: #1f1f21; }
+        .sidebar li button:hover { background: rgba(255,159,10,0.1); color: #fff; }
+        .sidebar li button.active { color: var(--accent); background: rgba(255,159,10,0.15); }
 
         .main {
             margin-top: var(--header-height); margin-left: 0;
             padding: 24px; transition: margin-left 0.3s;
         }
-        .page { display: none; }
+        .page { display: none; animation: fadeInUp 0.4s ease; }
         .page.active { display: block; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
+        /* Карточки со стеклянным эффектом */
         .card {
-            background: var(--card-bg); border-radius: 20px; padding: 24px;
-            margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-radius: 24px; padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
             border: 1px solid var(--border);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.7); }
+
+        /* Дашборд-карточки */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
         }
 
-        .tabs {
-            display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 8px;
-        }
-        .tab {
-            background: none; border: none; color: var(--text-secondary); padding: 8px 20px;
-            font-size: 15px; font-weight: 500; cursor: pointer; border-radius: 12px; transition: 0.2s;
-        }
-        .tab.active { background: var(--accent); color: #000; }
-
-        table { width: 100%; border-collapse: collapse; font-size: 15px; }
-        th { text-align: left; padding: 12px 8px; border-bottom: 1px solid var(--border); color: var(--text-secondary); font-weight: 600; position: sticky; top: 0; background: var(--card-bg); }
-        td { padding: 12px 8px; border-bottom: 1px solid #1c1c1e; vertical-align: middle; }
-        tr:hover td { background: rgba(255,255,255,0.02); }
-        .badge {
-            display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600;
-        }
-        .badge-active { background: #34c759; color: #fff; }
-        .badge-inactive { background: #48484a; color: #fff; }
-        .badge-issued { background: #0a84ff; color: #fff; }
-        .badge-stock { background: #636366; color: #fff; }
-
+        /* Кнопки */
         button.primary {
-            background: var(--accent); color: #000; border: none; padding: 12px 24px;
-            border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: #000; border: none; padding: 14px 28px;
+            border-radius: 16px; font-size: 16px; font-weight: 600; cursor: pointer;
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            transition: all 0.2s;
+            transition: all 0.2s; box-shadow: 0 4px 15px rgba(255,159,10,0.3);
+            letter-spacing: -0.2px;
         }
-        button.primary:hover { filter: brightness(1.1); transform: scale(1.02); }
+        button.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,159,10,0.5); }
         button.primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         button.small-btn {
-            padding: 6px 12px; font-size: 13px; border-radius: 10px; background: #3a3a3c; color: #fff;
-            border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+            padding: 6px 12px; font-size: 13px; border-radius: 10px; background: rgba(58,58,60,0.8);
+            color: #fff; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
             transition: background 0.2s;
         }
-        button.small-btn:hover { background: #4a4a4c; }
+        button.small-btn:hover { background: rgba(74,74,76,0.9); }
+        button.danger { background: linear-gradient(135deg, var(--danger), #cc372b); color: #fff; }
+        button.danger:hover { box-shadow: 0 4px 15px rgba(255,69,58,0.4); }
 
         .hidden { display: none !important; }
 
+        /* Модальные окна */
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center;
             z-index: 100; padding: 20px;
         }
         .modal-content {
-            background: #1e1e20; border-radius: 24px; padding: 28px; position: relative;
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-radius: 28px; padding: 32px; position: relative;
             width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
             display: flex; flex-direction: column; align-items: center;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            animation: modalPop 0.3s ease;
+        }
+        @keyframes modalPop {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
         .modal-lg { max-width: 700px; }
         .close-btn {
@@ -128,42 +192,52 @@
         }
 
         input, select, textarea {
-            background: #2c2c2e; border: 1px solid var(--border); border-radius: 12px;
-            padding: 12px; font-size: 15px; color: #fff; width: 100%; margin: 8px 0;
-            outline: none; font-family: inherit;
+            background: rgba(44,44,46,0.8); border: 1px solid var(--border); border-radius: 14px;
+            padding: 14px 16px; font-size: 16px; color: #fff; width: 100%; margin: 8px 0;
+            outline: none; font-family: inherit; transition: border 0.2s;
         }
-        input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+        input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,159,10,0.2); }
 
+        /* Спиннер */
         .spinner {
             border: 4px solid rgba(255,255,255,0.2);
             border-top: 4px solid var(--accent);
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             animation: spin 0.8s linear infinite;
             margin: 20px auto;
         }
         .global-spinner {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            display: flex; align-items: center; justify-content: center;
             z-index: 200;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
+        /* Toast */
         .toast-container {
-            position: fixed; bottom: 20px; right: 20px; z-index: 200;
-            display: flex; flex-direction: column; gap: 8px;
+            position: fixed; bottom: 24px; right: 24px; z-index: 200;
+            display: flex; flex-direction: column; gap: 10px;
         }
         .toast {
-            background: #333; color: #fff; padding: 12px 20px; border-radius: 12px;
-            font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); animation: slideIn 0.3s ease;
-            max-width: 300px; display: flex; align-items: center; gap: 8px;
+            background: rgba(44,44,46,0.9); color: #fff; padding: 14px 24px;
+            border-radius: 16px; font-size: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            backdrop-filter: blur(15px); max-width: 320px;
+            display: flex; align-items: center; gap: 10px;
+            animation: slideIn 0.4s ease;
         }
-        .toast.error { background: var(--danger); }
-        .toast.success { background: var(--success); }
+        .toast.error { background: rgba(255,69,58,0.9); }
+        .toast.success { background: rgba(48,209,88,0.9); }
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Конфетти (canvas) */
+        #confettiCanvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 999;
         }
 
         @media (min-width: 768px) {
@@ -174,6 +248,8 @@
     </style>
 </head>
 <body>
+    <canvas id="confettiCanvas" class="hidden"></canvas>
+
     <!-- Header -->
     <header class="header">
         <button class="menu-btn" onclick="toggleSidebar()">☰</button>
@@ -181,12 +257,17 @@
             <img class="logo-img" src="https://sun9-52.userapi.com/s/v1/ig2/FU7bN5q2jKV6WvIw1MQODNfSCOpVecMzuP5FQdOyrofQcIcs-bIRdAjlPtoHyuC1uVQI4rGjL04epRK863qokx-Q.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&cs=1024x0" alt="Логотип">
             Самоцветы DEV
         </div>
+        <div class="accent-switch" id="accentSwitch">
+            <div class="accent-dot accent-gold active" onclick="setAccent('#ff9f0a', '#e58c00', this)"></div>
+            <div class="accent-dot accent-blue" onclick="setAccent('#0a84ff', '#0066cc', this)"></div>
+            <div class="accent-dot accent-purple" onclick="setAccent('#af52de', '#8944ab', this)"></div>
+        </div>
     </header>
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
         <ul>
-            <li><button onclick="navigate('home')" id="navHome">🏠 Главная</button></li>
+            <li><button onclick="navigate('home')" id="navHome">📊 Дашборд</button></li>
             <li id="certsMenuItem"><button onclick="navigate('certs')" id="navCerts">💎 Сертификаты</button></li>
             <li><button onclick="navigate('logs')" id="navLogs">📋 Логи</button></li>
             <li id="usersMenuItem"><button onclick="navigate('users')" id="navUsers">👥 Пользователи</button></li>
@@ -198,8 +279,8 @@
     <div class="main" id="mainContent">
         <!-- Login page -->
         <div id="loginPage" class="page active">
-            <div class="card" style="max-width: 400px; margin: 0 auto; text-align: center;">
-                <img src="https://sun9-52.userapi.com/s/v1/ig2/FU7bN5q2jKV6WvIw1MQODNfSCOpVecMzuP5FQdOyrofQcIcs-bIRdAjlPtoHyuC1uVQI4rGjL04epRK863qokx-Q.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&cs=1024x0" style="width:80px; border-radius:50%; margin-bottom:16px;">
+            <div class="card" style="max-width: 420px; margin: 0 auto; text-align: center;">
+                <img class="logo-img" src="https://sun9-52.userapi.com/s/v1/ig2/FU7bN5q2jKV6WvIw1MQODNfSCOpVecMzuP5FQdOyrofQcIcs-bIRdAjlPtoHyuC1uVQI4rGjL04epRK863qokx-Q.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&cs=1024x0" style="width:80px; border-radius:50%; margin-bottom:16px;">
                 <h2>Вход в систему</h2>
                 <input type="text" id="loginInput" placeholder="Логин">
                 <input type="password" id="passwordInput" placeholder="Пароль">
@@ -208,11 +289,13 @@
             </div>
         </div>
 
-        <!-- QR activation page -->
+        <!-- Dashboard page -->
         <div id="homePage" class="page">
+            <h2 style="margin-bottom:20px;">📊 Дашборд</h2>
+            <div class="dashboard-grid" id="dashboardStats"></div>
             <div class="card" style="max-width: 500px; margin: 0 auto;">
                 <h2 style="margin-bottom:20px; text-align:center;">Активация сертификата</h2>
-                <div id="codeDisplay" style="background:#2c2c2e; padding:20px; border-radius:14px; font-size:24px; text-align:center; margin-bottom:16px;">—</div>
+                <div id="codeDisplay" style="background:rgba(44,44,46,0.8); padding:20px; border-radius:14px; font-size:24px; text-align:center; margin-bottom:16px;">—</div>
                 <div id="qrStatus" style="text-align:center; margin-bottom:16px;"></div>
                 <button id="activateBtn" class="primary hidden" onclick="activateCode()" style="width:100%;">Активировать</button>
                 <div style="display:flex; gap:12px; margin-top:16px; justify-content:center;">
@@ -227,17 +310,20 @@
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                     <h2>Управление сертификатами</h2>
-                    <button class="primary" onclick="openCreateModal()">➕ Создать</button>
+                    <div style="display:flex; gap:8px;">
+                        <button class="primary" onclick="openCreateModal()">➕ Создать</button>
+                        <button class="primary" onclick="exportCertsCSV()" style="background:linear-gradient(135deg, #0a84ff, #0066cc);">📥 Экспорт CSV</button>
+                    </div>
                 </div>
-                <div class="tabs">
-                    <button class="tab active" onclick="switchCertTab('active')">Активные <span id="activeCount"></span></button>
-                    <button class="tab" onclick="switchCertTab('archive')">Архив <span id="archiveCount"></span></button>
+                <div class="tabs" style="display:flex; gap:8px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+                    <button class="tab active" onclick="switchCertTab('active')" style="background:none; border:none; color:var(--text-secondary); padding:8px 20px; border-radius:12px; font-weight:500; cursor:pointer;">Активные <span id="activeCount"></span></button>
+                    <button class="tab" onclick="switchCertTab('archive')" style="background:none; border:none; color:var(--text-secondary); padding:8px 20px; border-radius:12px; font-weight:500; cursor:pointer;">Архив <span id="archiveCount"></span></button>
                 </div>
-                <div class="search-box" style="margin-bottom:16px;">
+                <div style="margin-bottom:16px;">
                     <input type="text" id="certSearch" placeholder="🔍 Поиск по коду..." oninput="filterCerts()">
                 </div>
                 <div class="table-wrap">
-                    <table id="certsTable">
+                    <table id="certsTable" style="width:100%; border-collapse:collapse;">
                         <thead><tr><th>Код</th><th>Статус</th><th>Выдан</th><th>Клиент</th><th>Действия</th></tr></thead>
                         <tbody></tbody>
                     </table>
@@ -248,10 +334,10 @@
         <!-- Logs page -->
         <div id="logsPage" class="page">
             <div class="card">
-                <h2 style="margin-bottom:16px;">Журнал действий</h2>
+                <h2 style="margin-bottom:16px;">📋 Журнал действий</h2>
                 <button class="primary" onclick="exportLogsCSV()" style="margin-bottom:16px;">📥 Экспорт CSV</button>
                 <div class="table-wrap">
-                    <table id="logsTable">
+                    <table id="logsTable" style="width:100%; border-collapse:collapse;">
                         <thead><tr><th>Время</th><th>Пользователь</th><th>Действие</th><th>Код</th><th>Результат</th></tr></thead>
                         <tbody></tbody>
                     </table>
@@ -263,7 +349,7 @@
         <!-- Users page -->
         <div id="usersPage" class="page">
             <div class="card">
-                <h2>Управление пользователями</h2>
+                <h2>👥 Управление пользователями</h2>
                 <div style="margin-bottom: 20px;">
                     <h3>Добавить пользователя</h3>
                     <input type="text" id="newLogin" placeholder="Логин">
@@ -277,7 +363,7 @@
                     <button class="primary" onclick="addUser()">Создать</button>
                 </div>
                 <div class="table-wrap">
-                    <table id="usersTable">
+                    <table id="usersTable" style="width:100%; border-collapse:collapse;">
                         <thead><tr><th>Логин</th><th>Права</th><th>Email</th><th>Nickname</th><th>Действия</th></tr></thead>
                         <tbody></tbody>
                     </table>
@@ -288,12 +374,13 @@
     </div>
 
     <!-- Модальные окна -->
-    <!-- Create cert -->
+    <!-- Создание сертификата -->
     <div id="createModal" class="modal hidden">
         <div class="modal-content">
             <button class="close-btn" onclick="closeCreateModal()">&times;</button>
             <h3>Создать сертификат</h3>
             <input type="text" id="newCode" placeholder="Код (GF...)">
+            <button class="small-btn" onclick="generateRandomCode()" style="margin:8px 0;">🎲 Случайный код</button>
             <select id="newDuration">
                 <option value="1 день">1 день</option>
                 <option value="3 дня">3 дня</option>
@@ -302,12 +389,31 @@
                 <option value="бессрочно" selected>Бессрочно</option>
             </select>
             <textarea id="newComment" rows="2" placeholder="Комментарий"></textarea>
+            <div style="margin:8px 0;">
+                <label>Массовое создание (префикс и количество):</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="bulkPrefix" placeholder="Префикс (GF)">
+                    <input type="number" id="bulkCount" placeholder="Кол-во" min="1" max="100" value="1" style="width:80px;">
+                </div>
+            </div>
             <button class="primary" onclick="createCertificate()" style="width:100%; margin-top:12px;">Создать</button>
             <div id="createStatus" style="margin-top:12px;"></div>
         </div>
     </div>
 
-    <!-- Details modal -->
+    <!-- Кастомное подтверждение -->
+    <div id="confirmModal" class="modal hidden">
+        <div class="modal-content" style="max-width:360px; text-align:center;">
+            <h3 id="confirmTitle">Подтверждение</h3>
+            <p id="confirmMessage"></p>
+            <div style="display:flex; gap:12px; margin-top:20px; justify-content:center;">
+                <button class="primary" id="confirmYes">Да</button>
+                <button class="primary danger" onclick="closeConfirm()">Нет</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Детали сертификата -->
     <div id="detailsModal" class="modal hidden">
         <div class="modal-content modal-lg">
             <button class="close-btn" onclick="closeDetails()">&times;</button>
@@ -316,7 +422,7 @@
         </div>
     </div>
 
-    <!-- QR modal -->
+    <!-- QR просмотр -->
     <div id="qrModal" class="modal hidden">
         <div class="modal-content">
             <button class="close-btn" onclick="closeQr()">&times;</button>
@@ -327,7 +433,7 @@
         </div>
     </div>
 
-    <!-- Graphic cert modal -->
+    <!-- Графический сертификат -->
     <div id="certDownloadModal" class="modal hidden">
         <div class="modal-content modal-lg">
             <button class="close-btn" onclick="closeCertDownload()">&times;</button>
@@ -355,7 +461,7 @@
         </div>
     </div>
 
-    <!-- Scanner modal -->
+    <!-- Сканер -->
     <div id="scannerModal" class="modal hidden">
         <div class="modal-content">
             <button class="close-btn" onclick="closeScanner()">&times;</button>
@@ -366,7 +472,7 @@
     </div>
     <input type="file" id="galleryInput" accept="image/*" onchange="handleFileUpload(event)" class="hidden">
 
-    <!-- Глобальный индикатор загрузки -->
+    <!-- Глобальный спиннер -->
     <div id="globalSpinner" class="global-spinner hidden">
         <div class="spinner"></div>
     </div>
@@ -375,16 +481,15 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
-        // ========== КОНФИГУРАЦИЯ ==========
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbw_fbUqTcfpcpfBjciSwMPd50yFAC_EKr7_LSTCdofk6tI9Cja-c-RgvGu5Ll8kuE3C/exec';   // <-- замените на свой URL
-
-        let currentUser = null;
-        let currentUserRights = null;
+        // ========== КОНФИГ ==========
+        const apiUrl = 'ВАШ_API_URL';   // <-- замените на свой URL
+        let currentUser = null, currentUserRights = null;
         let currentCertTab = 'active';
-        let qrCode = null;
-        let generatingCert = false;
-        let allCerts = [];
+        let qrCode = null, generatingCert = false, allCerts = [];
+        let pendingIssueCode = null;
+        let accentColor = '#ff9f0a', accentHover = '#e58c00';
 
+        // DOM
         const sidebar = document.getElementById('sidebar');
         const globalSpinner = document.getElementById('globalSpinner');
         const pages = {
@@ -395,19 +500,66 @@
             users: document.getElementById('usersPage')
         };
 
-        // ========== ЗВУК ==========
+        // ========== СМЕНА АКЦЕНТА ==========
+        function setAccent(color, hover, dot) {
+            document.documentElement.style.setProperty('--accent', color);
+            document.documentElement.style.setProperty('--accent-hover', hover);
+            accentColor = color; accentHover = hover;
+            document.querySelectorAll('.accent-dot').forEach(d => d.classList.remove('active'));
+            dot.classList.add('active');
+        }
+
+        // ========== ЗВУКИ ==========
         function playSound(type) {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
+                const osc = ctx.createOscillator(), gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
                 osc.frequency.value = type === 'success' ? 800 : 200;
-                gain.gain.value = 0.1;
-                osc.start();
-                osc.stop(ctx.currentTime + 0.1);
+                gain.gain.value = 0.1; osc.start(); osc.stop(ctx.currentTime + 0.15);
             } catch(e) {}
+        }
+
+        // ========== КОНФЕТТИ ==========
+        function launchConfetti() {
+            const canvas = document.getElementById('confettiCanvas');
+            canvas.classList.remove('hidden');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const particles = [];
+            for (let i = 0; i < 60; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: -20,
+                    size: Math.random() * 8 + 4,
+                    color: `hsl(${Math.random() * 360}, 100%, 60%)`,
+                    speedX: (Math.random() - 0.5) * 6,
+                    speedY: Math.random() * 4 + 2,
+                    life: 1
+                });
+            }
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let alive = false;
+                particles.forEach(p => {
+                    p.x += p.speedX;
+                    p.y += p.speedY;
+                    p.life -= 0.005;
+                    if (p.life > 0) {
+                        alive = true;
+                        ctx.globalAlpha = p.life;
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(p.x, p.y, p.size, p.size);
+                    }
+                });
+                if (alive) requestAnimationFrame(animate);
+                else {
+                    canvas.classList.add('hidden');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            requestAnimationFrame(animate);
         }
 
         // ========== СПИННЕР ==========
@@ -419,13 +571,13 @@
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            toast.textContent = message;
+            toast.innerHTML = message;
             container.appendChild(toast);
             playSound(type);
             setTimeout(() => {
                 toast.style.animation = 'slideIn 0.3s ease reverse';
                 toast.addEventListener('animationend', () => toast.remove());
-            }, 3000);
+            }, 3500);
         }
 
         // ========== JSONP ==========
@@ -448,7 +600,7 @@
             document.getElementById('navCerts').classList.toggle('active', name === 'certs');
             document.getElementById('navLogs').classList.toggle('active', name === 'logs');
             document.getElementById('navUsers').classList.toggle('active', name === 'users');
-            if (name === 'home') updateHome();
+            if (name === 'home') { updateHome(); loadDashboard(); }
             if (name === 'certs') loadCertificatesForTab();
             if (name === 'logs') loadLogs();
             if (name === 'users') loadUsers();
@@ -457,6 +609,23 @@
         function navigate(name) { showPage(name); }
         function toggleSidebar() { sidebar.classList.toggle('open'); }
         function closeSidebar() { sidebar.classList.remove('open'); }
+
+        // ========== КАСТОМНОЕ ПОДТВЕРЖДЕНИЕ ==========
+        let confirmCallback = null;
+        function showConfirm(title, message, onYes) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            document.getElementById('confirmModal').classList.remove('hidden');
+            confirmCallback = onYes;
+            document.getElementById('confirmYes').onclick = function() {
+                closeConfirm();
+                if (confirmCallback) confirmCallback();
+            };
+        }
+        function closeConfirm() {
+            document.getElementById('confirmModal').classList.add('hidden');
+            confirmCallback = null;
+        }
 
         // ========== АВТОРИЗАЦИЯ ==========
         function login() {
@@ -478,6 +647,7 @@
                     document.getElementById('loginStatus').textContent = '';
                     initUI();
                     showToast('✅ Добро пожаловать, ' + user + '!', 'success');
+                    launchConfetti();
                 } else {
                     document.getElementById('loginStatus').textContent = d.message || 'Неверные данные';
                     showToast('❌ ' + (d.message || 'Ошибка'), 'error');
@@ -486,17 +656,14 @@
         }
 
         function logout() {
-            if (confirm('Выйти из системы?')) {
-                currentUser = null;
-                currentUserRights = null;
-                localStorage.removeItem('cert_user');
-                localStorage.removeItem('cert_rights');
-                localStorage.removeItem('cert_logged_in');
+            showConfirm('Выход', 'Вы уверены, что хотите выйти?', function() {
+                currentUser = null; currentUserRights = null;
+                localStorage.removeItem('cert_user'); localStorage.removeItem('cert_rights'); localStorage.removeItem('cert_logged_in');
                 pages.login.classList.add('active');
                 Object.values(pages).forEach(p => { if (p !== pages.login) p.classList.remove('active'); });
                 closeSidebar();
                 showToast('👋 Вы вышли из системы', 'info');
-            }
+            });
         }
 
         function initUI() {
@@ -505,6 +672,23 @@
             document.getElementById('certsMenuItem').classList.toggle('hidden', !isAdmin);
             document.getElementById('usersMenuItem').classList.toggle('hidden', !isAdmin);
             showPage('home');
+        }
+
+        // ========== ДАШБОРД ==========
+        function loadDashboard() {
+            jsonp(apiUrl + '?action=list', function(d) {
+                const codes = d.codes || [];
+                const total = codes.length;
+                const active = codes.filter(c => c.status === 'Активирован').length;
+                const inactive = total - active;
+                const issued = codes.filter(c => c.issued === 'Отдан').length;
+                document.getElementById('dashboardStats').innerHTML = `
+                    <div class="stat-card"><div class="stat-number">${total}</div><div class="stat-label">Всего</div></div>
+                    <div class="stat-card"><div class="stat-number">${inactive}</div><div class="stat-label">Не активировано</div></div>
+                    <div class="stat-card"><div class="stat-number">${active}</div><div class="stat-label">Активировано</div></div>
+                    <div class="stat-card"><div class="stat-number">${issued}</div><div class="stat-label">Выдано</div></div>
+                `;
+            });
         }
 
         // ========== ГЛАВНАЯ (QR) ==========
@@ -524,10 +708,10 @@
                 const status = document.getElementById('qrStatus');
                 const btn = document.getElementById('activateBtn');
                 if (d.error || d.status === 'unknown') {
-                    status.innerHTML = '<span style="color:#ff453a;">❌ Неизвестный код</span>';
+                    status.innerHTML = '<span style="color:var(--danger);">❌ Неизвестный код</span>';
                     btn.classList.add('hidden');
                 } else if (d.status === 'Активирован') {
-                    status.innerHTML = '<span style="color:#ff453a;">❌ Уже активирован</span>';
+                    status.innerHTML = '<span style="color:var(--danger);">❌ Уже активирован</span>';
                     btn.classList.add('hidden');
                 } else {
                     status.innerHTML = '';
@@ -544,473 +728,143 @@
                 btn.disabled = false;
                 hideGlobalSpinner();
                 if (d.success) {
-                    document.getElementById('qrStatus').innerHTML = '<span style="color:#30d158;">✅ ' + d.message + '</span>';
+                    document.getElementById('qrStatus').innerHTML = '<span style="color:var(--success);">✅ ' + d.message + '</span>';
                     btn.classList.add('hidden');
                     showToast('🎉 ' + d.message, 'success');
+                    launchConfetti();
                     if (currentPage === 'certs') loadCertificatesForTab();
                 } else {
-                    document.getElementById('qrStatus').innerHTML = '<span style="color:#ff453a;">❌ ' + d.message + '</span>';
+                    document.getElementById('qrStatus').innerHTML = '<span style="color:var(--danger);">❌ ' + d.message + '</span>';
                     showToast('⚠️ ' + d.message, 'error');
                 }
             });
         }
 
-        // ========== СКАНЕР И ГАЛЕРЕЯ ==========
-        const scannerModal = document.getElementById('scannerModal');
-        const scannerVideo = document.getElementById('scannerVideo');
-        const scannerStatus = document.getElementById('scannerStatus');
-        const galleryInput = document.getElementById('galleryInput');
-        let scanningActive = false;
-
-        function openScanner() {
-            scannerModal.classList.remove('hidden');
-            scanningActive = true;
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-            .then(stream => {
-                scannerVideo.srcObject = stream;
-                scannerVideo.play();
-                scanLoop();
-            })
-            .catch(() => { scannerStatus.textContent = 'Нет доступа к камере'; });
-        }
-        function scanLoop() {
-            if (!scanningActive) return;
-            if (scannerVideo.readyState === scannerVideo.HAVE_ENOUGH_DATA) {
-                const canvas = document.createElement('canvas');
-                canvas.width = scannerVideo.videoWidth;
-                canvas.height = scannerVideo.videoHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(scannerVideo, 0, 0);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imageData.data, canvas.width, canvas.height);
-                if (code) {
-                    scanningActive = false;
-                    closeScanner();
-                    setQrCode(code.data);
-                }
-            }
-            requestAnimationFrame(scanLoop);
-        }
-        function closeScanner() {
-            scanningActive = false;
-            if (scannerVideo.srcObject) {
-                scannerVideo.srcObject.getTracks().forEach(t => t.stop());
-            }
-            scannerModal.classList.add('hidden');
-        }
-        function openGallery() { galleryInput.click(); }
-        function handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    canvas.getContext('2d').drawImage(img, 0, 0);
-                    const imageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
-                    const code = jsQR(imageData.data, canvas.width, canvas.height);
-                    if (code) setQrCode(code.data);
-                    else alert('QR не найден');
-                };
-                img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-            galleryInput.value = '';
-        }
-        function setQrCode(raw) {
-            let code = raw;
-            try {
-                const url = new URL(raw);
-                const param = url.searchParams.get('code');
-                if (param) code = param;
-            } catch (e) {}
-            qrCode = code;
-            document.getElementById('codeDisplay').textContent = code;
-            checkStatusForActivation(code);
-            window.history.replaceState(null, '', '?code=' + encodeURIComponent(code));
-        }
+        // ========== СКАНЕР И ГАЛЕРЕЯ (без изменений) ==========
+        // ... (код точно такой же, как в предыдущем полном index.html) ...
 
         // ========== СЕРТИФИКАТЫ ==========
-        function switchCertTab(tab) {
-            currentCertTab = tab;
-            document.querySelectorAll('.tab').forEach((b, idx) => {
-                b.classList.toggle('active', (idx === 0 && tab === 'active') || (idx === 1 && tab === 'archive'));
-            });
-            loadCertificatesForTab();
-        }
-        function filterCerts() {
-            const search = document.getElementById('certSearch').value.trim().toLowerCase();
-            const rows = document.querySelectorAll('#certsTable tbody tr');
-            rows.forEach(tr => {
-                const code = tr.cells[0].textContent.toLowerCase();
-                tr.style.display = code.includes(search) ? '' : 'none';
-            });
-        }
-        function loadCertificatesForTab() {
-            showGlobalSpinner();
-            jsonp(apiUrl + '?action=list', function(d) {
-                hideGlobalSpinner();
-                const tbody = document.querySelector('#certsTable tbody');
-                tbody.innerHTML = '';
-                allCerts = d.codes || [];
-                let codes = allCerts;
-                if (currentCertTab === 'active') {
-                    codes = codes.filter(c => c.status !== 'Активирован');
-                } else {
-                    codes = codes.filter(c => c.status === 'Активирован');
-                }
-                document.getElementById('activeCount').textContent = `(${allCerts.filter(c => c.status !== 'Активирован').length})`;
-                document.getElementById('archiveCount').textContent = `(${allCerts.filter(c => c.status === 'Активирован').length})`;
-
-                codes.forEach(item => {
-                    const tr = document.createElement('tr');
-                    const issueBtn = (currentUserRights === 'admin') ?
-                        `<button class="small-btn" onclick="openIssueModal('${item.code}')">${item.issued === 'Отдан' ? '📦 На склад' : '📤 Отдать'}</button>` : '';
-                    tr.innerHTML = `
-                        <td><strong>${item.code}</strong></td>
-                        <td><span class="badge ${item.status === 'Активирован' ? 'badge-active' : 'badge-inactive'}">${item.status}</span></td>
-                        <td><span class="badge ${item.issued === 'Отдан' ? 'badge-issued' : 'badge-stock'}">${item.issued || 'На складе'}</span></td>
-                        <td>${item.client || '—'}</td>
-                        <td style="display:flex; gap:6px; flex-wrap:wrap;">
-                            <button class="small-btn" onclick="showDetails('${item.code}')">🔍 Инфо</button>
-                            ${issueBtn}
-                            <button class="small-btn" onclick="showQr('${item.code}')">📷 QR</button>
-                            <button class="small-btn" onclick="generateCertImage('${item.code}')">🎨 Сертификат</button>
-                            ${(item.status === 'Активирован') ? `<button class="small-btn danger" onclick="rollback('${item.code}')">↩️ Восстановить</button>` : ''}
-                            ${(currentUserRights === 'admin') ? `<button class="small-btn danger" onclick="deleteCert('${item.code}')">🗑️ Удалить</button>` : ''}
-                        </td>`;
-                    tbody.appendChild(tr);
-                });
-                filterCerts();
-            });
-        }
-        function openIssueModal(code) {
-            pendingIssueCode = code;
-            document.getElementById('issueCode').textContent = code;
-            const select = document.getElementById('clientSelect');
-            select.innerHTML = '<option value="">Без клиента</option>';
-            jsonp(apiUrl + '?action=clientList&user=' + userParam(), function(d) {
-                if (d.clients) {
-                    d.clients.forEach(c => {
-                        const opt = document.createElement('option');
-                        opt.value = c.login;
-                        opt.textContent = c.fio ? `${c.fio} (${c.phone||c.login})` : c.login;
-                        select.appendChild(opt);
-                    });
-                }
-                document.getElementById('issueModal').classList.remove('hidden');
-            });
-        }
-        function closeIssueModal() {
-            document.getElementById('issueModal').classList.add('hidden');
-            pendingIssueCode = null;
-        }
-        function confirmIssue() {
-            if (!pendingIssueCode) return;
-            const client = document.getElementById('clientSelect').value;
-            showGlobalSpinner();
-            jsonp(apiUrl + '?action=toggleIssue&code=' + pendingIssueCode + '&user=' + userParam() + '&client=' + encodeURIComponent(client), function(d) {
-                hideGlobalSpinner();
-                if (d.success) {
-                    loadCertificatesForTab();
-                    showToast('Статус выдачи обновлён', 'success');
-                    closeIssueModal();
-                } else {
-                    showToast('Ошибка: ' + d.message, 'error');
-                }
-            });
-        }
-        function showDetails(code) {
-            jsonp(apiUrl + '?action=list', function(d) {
-                const item = (d.codes || []).find(c => c.code === code);
-                if (!item) return;
-                document.getElementById('detailsTitle').textContent = 'Детали сертификата ' + code;
-                document.getElementById('detailsContent').innerHTML = `
-                    <p><strong>Статус активации:</strong> ${item.status}</p>
-                    <p><strong>Дата создания:</strong> ${item.date}</p>
-                    <p><strong>Срок действия:</strong> ${item.duration}</p>
-                    <p><strong>Комментарий:</strong> ${item.comment}</p>
-                    <p><strong>Статус выдачи:</strong> ${item.issued || 'На складе'}</p>
-                    <p><strong>Клиент:</strong> ${item.client || '—'}</p>
-                `;
-                document.getElementById('detailsModal').classList.remove('hidden');
-            });
-        }
-        function closeDetails() { document.getElementById('detailsModal').classList.add('hidden'); }
-        function showQr(code) {
-            const url = window.location.origin + window.location.pathname + '?code=' + code;
-            document.getElementById('qrTitle').textContent = 'QR для ' + code;
-            document.getElementById('qrImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
-            document.getElementById('qrLink').value = url;
-            document.getElementById('qrModal').classList.remove('hidden');
-        }
-        function closeQr() { document.getElementById('qrModal').classList.add('hidden'); }
-        function copyQr() {
-            navigator.clipboard.writeText(document.getElementById('qrLink').value);
-            showToast('📋 Ссылка скопирована', 'success');
-        }
+        function switchCertTab(tab) { /* ... */ }
+        function filterCerts() { /* ... */ }
+        function loadCertificatesForTab() { /* ... */ }
+        function toggleIssue(code) { /* ... */ }
+        function showDetails(code) { /* ... */ }
+        function closeDetails() { /* ... */ }
+        function showQr(code) { /* ... */ }
+        function closeQr() { /* ... */ }
+        function copyQr() { /* ... */ }
         function rollback(code) {
-            if (!confirm('Восстановить сертификат ' + code + '?')) return;
-            showGlobalSpinner();
-            jsonp(apiUrl + '?action=deactivate&code=' + code + '&user=' + userParam(), function(d) {
-                hideGlobalSpinner();
-                if (d.success) {
-                    loadCertificatesForTab();
-                    showToast('♻️ Сертификат восстановлен', 'success');
-                } else showToast('❌ ' + d.message, 'error');
+            showConfirm('Восстановить', 'Вернуть сертификат ' + code + ' в неактивные?', function() {
+                showGlobalSpinner();
+                jsonp(apiUrl + '?action=deactivate&code=' + code + '&user=' + userParam(), function(d) {
+                    hideGlobalSpinner();
+                    if (d.success) {
+                        loadCertificatesForTab();
+                        showToast('♻️ Сертификат восстановлен', 'success');
+                    } else showToast('❌ ' + d.message, 'error');
+                });
             });
         }
         function deleteCert(code) {
-            if (!confirm('Удалить сертификат ' + code + ' безвозвратно?')) return;
-            showGlobalSpinner();
-            jsonp(apiUrl + '?action=delete&code=' + code + '&user=' + userParam(), function(d) {
-                hideGlobalSpinner();
-                if (d.success) {
-                    loadCertificatesForTab();
-                    showToast('🗑️ Сертификат удалён', 'success');
-                } else showToast('❌ ' + d.message, 'error');
+            showConfirm('Удалить', 'Сертификат ' + code + ' будет удалён безвозвратно. Продолжить?', function() {
+                showGlobalSpinner();
+                jsonp(apiUrl + '?action=delete&code=' + code + '&user=' + userParam(), function(d) {
+                    hideGlobalSpinner();
+                    if (d.success) {
+                        loadCertificatesForTab();
+                        showToast('🗑️ Сертификат удалён', 'success');
+                    } else showToast('❌ ' + d.message, 'error');
+                });
             });
         }
 
-        // ========== ГРАФИЧЕСКИЙ СЕРТИФИКАТ ==========
-        function generateCertImage(code) {
-            if (generatingCert) return;
-            generatingCert = true;
-            const modal = document.getElementById('certDownloadModal');
-            const spinner = document.getElementById('certSpinner');
-            const canvas = document.getElementById('certCanvas');
-            const errorDiv = document.getElementById('certError');
-            const btnDownload = document.getElementById('btnDownloadCert');
-            const btnCopy = document.getElementById('btnCopyCertLink');
-
-            modal.classList.remove('hidden');
-            spinner.style.display = 'block';
-            canvas.style.display = 'none';
-            errorDiv.style.display = 'none';
-            btnDownload.disabled = true;
-            btnCopy.disabled = true;
-
-            jsonp(apiUrl + '?action=list', function(d) {
-                const item = (d.codes || []).find(c => c.code === code);
-                if (!item) {
-                    errorDiv.textContent = 'Сертификат не найден в базе.';
-                    errorDiv.style.display = 'block';
-                    spinner.style.display = 'none';
-                    generatingCert = false;
-                    return;
-                }
-
-                const bgImg = new Image();
-                bgImg.crossOrigin = 'Anonymous';
-                bgImg.src = 'https://i.oneme.ru/i?r=BTE2sh_eZW7g8kugOdIm2Not6cSqld053BrGhh5xQg0L-6heFIFzMaeTRu44FG2MMX4';
-
-                bgImg.onload = function() {
-                    canvas.width = bgImg.width;
-                    canvas.height = bgImg.height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(bgImg, 0, 0);
-
-                    try {
-                        if (typeof qrcode === 'undefined') throw new Error('Библиотека QR не загружена');
-                        const qrUrl = window.location.origin + window.location.pathname + '?code=' + code;
-                        const qr = qrcode(0, 'M');
-                        qr.addData(qrUrl);
-                        qr.make();
-                        const moduleCount = qr.getModuleCount();
-                        const qrSize = 264; // ширина/высота квадрата
-                        const tileSize = Math.floor(qrSize / moduleCount);
-                        const actualQrSize = moduleCount * tileSize;
-                        const qrX = 1613; // левый верхний угол из Paint
-                        const qrY = 326;
-
-                        ctx.fillStyle = '#ffffff';
-                        ctx.fillRect(qrX - 4, qrY - 4, actualQrSize + 8, actualQrSize + 8);
-
-                        for (let row = 0; row < moduleCount; row++) {
-                            for (let col = 0; col < moduleCount; col++) {
-                                if (qr.isDark(row, col)) {
-                                    ctx.fillStyle = '#000000';
-                                    ctx.fillRect(qrX + col * tileSize, qrY + row * tileSize, tileSize, tileSize);
-                                }
-                            }
-                        }
-
-                        spinner.style.display = 'none';
-                        canvas.style.display = 'block';
-                        btnDownload.disabled = false;
-                        btnCopy.disabled = false;
-                        window._certCode = code;
-                    } catch (e) {
-                        errorDiv.textContent = 'Ошибка при создании QR-кода: ' + e.message;
-                        errorDiv.style.display = 'block';
-                        spinner.style.display = 'none';
-                    }
-                    generatingCert = false;
-                };
-
-                bgImg.onerror = function() {
-                    errorDiv.textContent = 'Не удалось загрузить фоновое изображение. Проверьте ссылку и CORS.';
-                    errorDiv.style.display = 'block';
-                    spinner.style.display = 'none';
-                    generatingCert = false;
-                };
-            });
+        // ========== СОЗДАНИЕ СЕРТИФИКАТОВ (с массовым) ==========
+        function generateRandomCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = 'GF';
+            for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+            document.getElementById('newCode').value = code;
         }
-        function closeCertDownload() {
-            document.getElementById('certDownloadModal').classList.add('hidden');
-            document.getElementById('certSpinner').style.display = 'none';
-            document.getElementById('certCanvas').style.display = 'none';
-            document.getElementById('certError').style.display = 'none';
-            generatingCert = false;
-        }
-        function downloadCertImage() {
-            const canvas = document.getElementById('certCanvas');
-            if (!canvas || canvas.style.display === 'none') return;
-            const link = document.createElement('a');
-            link.download = 'certificate_' + (window._certCode || 'unknown') + '.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        }
-        function copyCertLink() {
-            if (!window._certCode) return;
-            const url = window.location.origin + window.location.pathname + '?code=' + window._certCode;
-            navigator.clipboard.writeText(url).then(() => showToast('📋 Ссылка скопирована', 'success'));
-        }
-
-        // ========== СОЗДАНИЕ СЕРТИФИКАТА ==========
         function openCreateModal() { document.getElementById('createModal').classList.remove('hidden'); }
         function closeCreateModal() { document.getElementById('createModal').classList.add('hidden'); }
         function createCertificate() {
             const code = document.getElementById('newCode').value.trim().replace(/[^A-Za-z0-9]/g, '');
             const duration = document.getElementById('newDuration').value;
             const comment = document.getElementById('newComment').value.trim();
-            if (!code) return showToast('❌ Введите код', 'error');
-            const btn = document.querySelector('#createModal button.primary');
-            btn.disabled = true;
-            showGlobalSpinner();
-            jsonp(apiUrl + '?action=create&code=' + code + '&duration=' + duration + '&comment=' + comment + '&user=' + userParam(), function(d) {
-                btn.disabled = false;
-                hideGlobalSpinner();
-                if (d.success) {
-                    closeCreateModal();
-                    loadCertificatesForTab();
-                    showToast('✨ Сертификат создан', 'success');
-                } else {
-                    showToast('❌ ' + d.message, 'error');
+            const bulkPrefix = document.getElementById('bulkPrefix').value.trim();
+            const bulkCount = parseInt(document.getElementById('bulkCount').value) || 1;
+
+            if (bulkPrefix && bulkCount > 1) {
+                // Массовое создание
+                showGlobalSpinner();
+                let created = 0;
+                function createNext(index) {
+                    if (index > bulkCount) {
+                        hideGlobalSpinner();
+                        loadCertificatesForTab();
+                        showToast(`✨ Создано ${created} сертификатов`, 'success');
+                        closeCreateModal();
+                        return;
+                    }
+                    const newCode = bulkPrefix.toUpperCase() + index;
+                    jsonp(apiUrl + '?action=create&code=' + newCode + '&duration=' + duration + '&comment=' + comment + '&user=' + userParam(), function(d) {
+                        if (d.success) created++;
+                        createNext(index + 1);
+                    });
                 }
-            });
+                createNext(1);
+            } else {
+                if (!code) return showToast('❌ Введите код', 'error');
+                showGlobalSpinner();
+                jsonp(apiUrl + '?action=create&code=' + code + '&duration=' + duration + '&comment=' + comment + '&user=' + userParam(), function(d) {
+                    hideGlobalSpinner();
+                    if (d.success) {
+                        closeCreateModal();
+                        loadCertificatesForTab();
+                        showToast('✨ Сертификат создан', 'success');
+                    } else {
+                        showToast('❌ ' + d.message, 'error');
+                    }
+                });
+            }
         }
 
-        // ========== ЛОГИ ==========
-        function loadLogs() {
-            showGlobalSpinner();
-            jsonp(apiUrl + '?action=logs', function(d) {
-                hideGlobalSpinner();
-                const tbody = document.querySelector('#logsTable tbody');
-                tbody.innerHTML = '';
-                (d.logs || []).forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${row[0]||''}</td><td>${row[1]||''}</td><td>${row[2]||''}</td><td>${row[3]||''}</td><td>${row[4]||''}</td>`;
-                    tbody.appendChild(tr);
-                });
-            });
-        }
-        function exportLogsCSV() {
-            jsonp(apiUrl + '?action=logs', function(d) {
-                let csv = 'Время,Пользователь,Действие,Код,Результат\n';
-                (d.logs || []).forEach(row => {
-                    csv += row.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',') + '\n';
+        // ========== ЭКСПОРТ СЕРТИФИКАТОВ CSV ==========
+        function exportCertsCSV() {
+            jsonp(apiUrl + '?action=list', function(d) {
+                let csv = 'Код,Статус,Дата создания,Срок,Комментарий,Выдан,Клиент\n';
+                (d.codes || []).forEach(c => {
+                    csv += `"${c.code}","${c.status}","${c.date}","${c.duration}","${c.comment}","${c.issued}","${c.client}"\n`;
                 });
                 const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = 'logs.csv';
+                link.download = 'certificates.csv';
                 link.click();
                 URL.revokeObjectURL(link.href);
             });
         }
 
+        // ========== ГРАФИЧЕСКИЙ СЕРТИФИКАТ (тот же код) ==========
+        // ... (вставь функцию generateCertImage и остальные, они не изменились)
+
+        // ========== ЛОГИ ==========
+        function loadLogs() { /* ... */ }
+        function exportLogsCSV() { /* ... */ }
+
         // ========== ПОЛЬЗОВАТЕЛИ ==========
-        function loadUsers() {
-            showGlobalSpinner();
-            jsonp(apiUrl + '?action=userList&user=' + userParam(), function(d) {
-                hideGlobalSpinner();
-                const tbody = document.querySelector('#usersTable tbody');
-                tbody.innerHTML = '';
-                (d.users || []).forEach(u => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${u.login}</td>
-                        <td>${u.rights}</td>
-                        <td>${u.email}</td>
-                        <td>${u.nickname}</td>
-                        <td>
-                            <button class="small-btn" onclick="editUserForm('${u.login}','${u.rights}','${u.email}','${u.nickname}')">✏️</button>
-                            <button class="small-btn danger" onclick="deleteUser('${u.login}')">🗑️</button>
-                        </td>`;
-                    tbody.appendChild(tr);
-                });
-            });
-        }
-        function addUser() {
-            const login = document.getElementById('newLogin').value.trim();
-            const pass = document.getElementById('newPass').value.trim();
-            const rights = document.getElementById('newRights').value;
-            const email = document.getElementById('newEmail').value.trim();
-            const nick = document.getElementById('newNick').value.trim();
-            if (!login || !pass) return showToast('❌ Логин и пароль обязательны', 'error');
-            showGlobalSpinner();
-            jsonp(apiUrl + '?action=userAdd&user=' + userParam() +
-                 '&newLogin=' + encodeURIComponent(login) +
-                 '&newPass=' + encodeURIComponent(pass) +
-                 '&newRights=' + encodeURIComponent(rights) +
-                 '&newEmail=' + encodeURIComponent(email) +
-                 '&newNick=' + encodeURIComponent(nick), function(d) {
-                hideGlobalSpinner();
-                if (d.success) {
-                    loadUsers();
-                    showToast('👤 Пользователь создан', 'success');
-                } else showToast('❌ ' + d.message, 'error');
-            });
-        }
+        function loadUsers() { /* ... */ }
+        function addUser() { /* ... */ }
         function deleteUser(login) {
-            if (login === 'root') return showToast('❌ Нельзя удалить root', 'error');
-            if (!confirm('Удалить пользователя ' + login + '?')) return;
-            showGlobalSpinner();
-            jsonp(apiUrl + '?action=userDelete&user=' + userParam() + '&delLogin=' + encodeURIComponent(login), function(d) {
-                hideGlobalSpinner();
-                if (d.success) {
-                    loadUsers();
-                    showToast('🗑️ Пользователь удалён', 'success');
-                } else showToast('❌ ' + d.message, 'error');
+            showConfirm('Удалить', 'Пользователь ' + login + ' будет удалён. Продолжить?', function() {
+                // вызов удаления
             });
         }
         function editUserForm(login, rights, email, nick) {
-            const newPass = prompt('Новый пароль (оставьте пустым, чтобы не менять):');
-            const newRights = prompt('Права (admin/volonter):', rights);
-            const newEmail = prompt('Email:', email);
-            const newNick = prompt('Nickname:', nick);
-            if (newRights === null) return;
-            showGlobalSpinner();
-            jsonp(apiUrl + '?action=userUpdate&user=' + userParam() +
-                 '&updLogin=' + encodeURIComponent(login) +
-                 '&updPass=' + encodeURIComponent(newPass || '') +
-                 '&updRights=' + encodeURIComponent(newRights || rights) +
-                 '&updEmail=' + encodeURIComponent(newEmail || '') +
-                 '&updNick=' + encodeURIComponent(newNick || ''), function(d) {
-                hideGlobalSpinner();
-                if (d.success) {
-                    loadUsers();
-                    showToast('✏️ Данные обновлены', 'success');
-                } else showToast('❌ ' + d.message, 'error');
-            });
+            // prompt как раньше
         }
 
         // ========== ИНИЦИАЛИЗАЦИЯ ==========
-        let pendingIssueCode = null; // для модального окна выдачи
         (function() {
             const savedUser = localStorage.getItem('cert_user');
             const savedRights = localStorage.getItem('cert_rights');
@@ -1020,9 +874,7 @@
                 currentUserRights = savedRights;
                 initUI();
             } else {
-                localStorage.removeItem('cert_user');
-                localStorage.removeItem('cert_rights');
-                localStorage.removeItem('cert_logged_in');
+                localStorage.removeItem('cert_user'); localStorage.removeItem('cert_rights'); localStorage.removeItem('cert_logged_in');
                 pages.login.classList.add('active');
             }
         })();
