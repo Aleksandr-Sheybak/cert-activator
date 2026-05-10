@@ -536,13 +536,21 @@
             reader.readAsDataURL(file);
             galleryInput.value = '';
         }
-        function setQrCode(code) {
-            qrCode = code;
-            document.getElementById('codeDisplay').textContent = code;
-            checkStatusForActivation(code);
-            window.history.replaceState(null, '', '?code=' + code);
-        }
-
+        function setQrCode(raw) {
+    let code = raw;
+    // Если результат похож на URL, пытаемся вытащить параметр ?code=...
+    try {
+        const url = new URL(raw);
+        const param = url.searchParams.get('code');
+        if (param) code = param;          // берём чистый код
+    } catch (e) {
+        // это не URL, значит просто код (например, GF001)
+    }
+    qrCode = code;
+    document.getElementById('codeDisplay').textContent = code;
+    checkStatusForActivation(code);
+    window.history.replaceState(null, '', '?code=' + encodeURIComponent(code));
+}
         // ========== СЕРТИФИКАТЫ ==========
         function switchCertTab(tab) {
             currentCertTab = tab;
