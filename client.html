@@ -3,79 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мои сертификаты</title>
+    <title>Самоцветы DEV – Личный кабинет</title>
     <style>
-        /* Лаконичный тёмный стиль, похожий на админку, но без бокового меню */
-        body { background: #121214; color: #fff; font-family: Arial, sans-serif; padding: 20px; }
-        .card { background: #1c1c1e; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
-        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #2c2c2e; background: #2c2c2e; color: #fff; }
-        button { background: #ff9f0a; color: #000; font-weight: bold; cursor: pointer; }
-        .badge { display: inline-block; padding: 4px 10px; border-radius: 10px; font-size: 13px; }
-        .badge-active { background: #34c759; }
-        .badge-inactive { background: #48484a; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 8px; border-bottom: 1px solid #2c2c2e; text-align: left; }
+        :root {
+            --accent: #ff9f0a;
+            --danger: #ff453a;
+            --success: #30d158;
+            --bg: #121214;
+            --card-bg: #1c1c1e;
+            --text: #f0f0f5;
+            --text-secondary: #98989d;
+            --border: #2c2c2e;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
+        body {
+            background-image: linear-gradient(rgba(18,18,20,0.85), rgba(18,18,20,0.85)),
+                              url('https://i.oneme.ru/i?r=BTE2sh_eZW7g8kugOdIm2Noti4nNqoRG8rejaPRr2859v6heFIFzMaeTRu44FG2MMX4');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 420px;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 32px 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        .logo {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent);
+            margin: 0 auto 16px;
+            display: block;
+            box-shadow: 0 0 20px rgba(255,159,10,0.4);
+        }
+        h2 {
+            font-size: 24px;
+            font-weight: 650;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        input, button {
+            width: 100%;
+            padding: 14px;
+            margin: 8px 0;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: #2c2c2e;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            font-family: inherit;
+            transition: border 0.2s;
+        }
+        input:focus { border-color: var(--accent); }
+        button {
+            background: var(--accent);
+            color: #000;
+            font-weight: 650;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        button:active { transform: scale(0.97); }
+        button:disabled { opacity: 0.5; transform: none; }
+        .hidden { display: none !important; }
+        .error-message {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 8px;
+            min-height: 20px;
+        }
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        /* Таблицы */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+        th {
+            text-align: left;
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #1c1c1e;
+            vertical-align: middle;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-active { background: #34c759; color: #fff; }
+        .badge-inactive { background: #48484a; color: #fff; }
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            object-fit: cover;
+        }
+        .button-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .button-row button {
+            flex: 1;
+        }
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+        /* Spinner */
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
-    <!-- Экран входа/регистрации -->
-    <div id="authScreen">
-        <div class="card">
-            <h2>Вход</h2>
+    <div class="container" id="app">
+        <!-- Экран входа -->
+        <div id="loginScreen" class="card fade-in">
+            <img class="logo" src="https://sun9-52.userapi.com/s/v1/ig2/FU7bN5q2jKV6WvIw1MQODNfSCOpVecMzuP5FQdOyrofQcIcs-bIRdAjlPtoHyuC1uVQI4rGjL04epRK863qokx-Q.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&cs=1024x0" alt="Логотип">
+            <h2>Вход в кабинет</h2>
+            <p class="subtitle">Самоцветы DEV</p>
             <input type="text" id="loginInput" placeholder="Логин (телефон или email)">
             <input type="password" id="passwordInput" placeholder="Пароль">
-            <button onclick="login()">Войти</button>
-            <p style="margin-top:10px;">Нет аккаунта? <a href="#" onclick="showRegister()">Зарегистрироваться</a></p>
-            <div id="authStatus" style="color:red;"></div>
+            <button id="loginBtn" onclick="login()">Войти</button>
+            <div class="error-message" id="loginError"></div>
+            <p style="margin-top:16px;">Нет аккаунта? <a href="#" onclick="showRegister()">Зарегистрироваться</a></p>
         </div>
-        <div class="card hidden" id="registerCard">
+
+        <!-- Экран регистрации -->
+        <div id="registerScreen" class="card hidden fade-in">
+            <img class="logo" src="https://sun9-52.userapi.com/s/v1/ig2/FU7bN5q2jKV6WvIw1MQODNfSCOpVecMzuP5FQdOyrofQcIcs-bIRdAjlPtoHyuC1uVQI4rGjL04epRK863qokx-Q.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&cs=1024x0" alt="Логотип">
             <h2>Регистрация</h2>
+            <p class="subtitle">Создайте аккаунт для получения сертификатов</p>
             <input type="text" id="regPhone" placeholder="Телефон (будет логином)">
             <input type="email" id="regEmail" placeholder="Email">
             <input type="text" id="regFIO" placeholder="ФИО">
             <input type="password" id="regPassword" placeholder="Придумайте пароль">
-            <button onclick="register()">Зарегистрироваться</button>
-            <button onclick="showLogin()" style="background:#444; color:#fff;">Назад</button>
-            <div id="regStatus" style="color:red;"></div>
+            <button id="registerBtn" onclick="register()">Зарегистрироваться</button>
+            <div class="error-message" id="regError"></div>
+            <p style="margin-top:16px;"><a href="#" onclick="showLogin()">← Назад ко входу</a></p>
         </div>
-    </div>
 
-    <!-- Личный кабинет (скрыт до входа) -->
-    <div id="cabinetScreen" class="hidden">
-        <div class="card">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <img id="avatarImg" src="" style="width:48px; height:48px; border-radius:50%; background:#333;">
-                <div>
-                    <strong id="nicknameDisplay"></strong>
-                    <p id="fioDisplay" style="margin:0; color:#aaa;"></p>
+        <!-- Кабинет -->
+        <div id="cabinetScreen" class="hidden">
+            <div class="card fade-in">
+                <div class="profile-header">
+                    <img id="avatarImg" class="avatar" src="" alt="Аватар">
+                    <div style="flex:1; text-align:left;">
+                        <strong id="nicknameDisplay" style="font-size:20px;"></strong>
+                        <p id="fioDisplay" style="color:var(--text-secondary); margin:0;"></p>
+                    </div>
+                    <button class="small-btn" onclick="editProfile()" style="width:auto; padding:8px 12px;">✏️</button>
                 </div>
-                <button onclick="editProfile()" style="width:auto; margin-left:auto;">✏️</button>
-                <button onclick="logout()" style="width:auto; background:#444; color:#fff;">Выйти</button>
+                <button onclick="logout()" style="background:#444; color:#fff; margin-top:12px;">🚪 Выйти</button>
+            </div>
+            <div class="card fade-in">
+                <h3 style="margin-bottom:16px;">🎁 Доступные сертификаты</h3>
+                <div id="activeCerts">
+                    <p style="color:var(--text-secondary);">Нет доступных сертификатов</p>
+                </div>
+            </div>
+            <div class="card fade-in">
+                <h3 style="margin-bottom:16px;">📦 Использованные сертификаты</h3>
+                <div id="usedCerts">
+                    <p style="color:var(--text-secondary);">Нет использованных сертификатов</p>
+                </div>
             </div>
         </div>
-        <div class="card">
-            <h3>Мои сертификаты</h3>
-            <table id="myCertsTable">
-                <thead><tr><th>Код</th><th>Статус</th><th>Действие</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-        <div class="card">
-            <h3>Активированные</h3>
-            <table id="myUsedCertsTable">
-                <thead><tr><th>Код</th><th>Дата создания</th></tr></thead>
-                <tbody></tbody>
-            </table>
+
+        <!-- Оверлей загрузки -->
+        <div id="loadingOverlay" class="overlay hidden">
+            <div class="spinner" style="width:48px; height:48px;"></div>
         </div>
     </div>
 
     <script>
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbw_fbUqTcfpcpfBjciSwMPd50yFAC_EKr7_LSTCdofk6tI9Cja-c-RgvGu5Ll8kuE3C/exec';   // <-- замените на свой
+        // ========== КОНФИГУРАЦИЯ ==========
+        const apiUrl = 'https://script.google.com/macros/s/AKfycbw_fbUqTcfpcpfBjciSwMPd50yFAC_EKr7_LSTCdofk6tI9Cja-c-RgvGu5Ll8kuE3C/exec';   // <-- замените на свой URL от Apps Script
+
         let currentClient = null;
 
-        function show(id) { document.getElementById(id).classList.remove('hidden'); }
-        function hide(id) { document.getElementById(id).classList.add('hidden'); }
+        // DOM элементы
+        const loginScreen = document.getElementById('loginScreen');
+        const registerScreen = document.getElementById('registerScreen');
+        const cabinetScreen = document.getElementById('cabinetScreen');
+        const loadingOverlay = document.getElementById('loadingOverlay');
 
+        // Показать/скрыть экраны
+        function showLogin() {
+            loginScreen.classList.remove('hidden');
+            registerScreen.classList.add('hidden');
+            cabinetScreen.classList.add('hidden');
+        }
+        function showRegister() {
+            loginScreen.classList.add('hidden');
+            registerScreen.classList.remove('hidden');
+            cabinetScreen.classList.add('hidden');
+        }
+        function showCabinet() {
+            loginScreen.classList.add('hidden');
+            registerScreen.classList.add('hidden');
+            cabinetScreen.classList.remove('hidden');
+            loadProfile();
+            loadMyCerts();
+        }
+
+        // Индикатор загрузки
+        function showLoading() { loadingOverlay.classList.remove('hidden'); }
+        function hideLoading() { loadingOverlay.classList.add('hidden'); }
+
+        // Утилита JSONP
         function jsonp(url, callback) {
             var script = document.createElement('script');
             var cb = 'jp_' + Math.random().toString(36).substr(2, 9);
@@ -84,123 +291,179 @@
             document.body.appendChild(script);
         }
 
-        // Вход
+        // ========== ВХОД ==========
         function login() {
             const login = document.getElementById('loginInput').value.trim();
             const pass = document.getElementById('passwordInput').value.trim();
-            if (!login || !pass) return;
+            if (!login || !pass) {
+                document.getElementById('loginError').textContent = 'Заполните все поля';
+                return;
+            }
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            showLoading();
             jsonp(apiUrl + '?action=login&user=' + encodeURIComponent(login) + '&password=' + encodeURIComponent(pass), function(d) {
-                if (d.success && d.rights === 'client') {
+                btn.disabled = false;
+                hideLoading();
+                if (d.success && (d.rights === 'client' || d.rights === 'volonter' || d.rights === 'admin')) {
+                    // Для клиента права client, но и другие роли тоже могут войти (например, если клиент заходит в админку, но здесь мы примем всех)
                     currentClient = login;
                     localStorage.setItem('client_login', login);
                     localStorage.setItem('client_pass', pass);
                     showCabinet();
                 } else {
-                    document.getElementById('authStatus').textContent = 'Неверный логин или пароль';
+                    document.getElementById('loginError').textContent = d.message || 'Неверный логин или пароль';
                 }
             });
         }
 
-        function showRegister() { hide('authScreen'); show('registerCard'); }
-        function showLogin() { show('authScreen'); hide('registerCard'); }
-
+        // ========== РЕГИСТРАЦИЯ ==========
         function register() {
             const phone = document.getElementById('regPhone').value.trim();
             const email = document.getElementById('regEmail').value.trim();
             const fio = document.getElementById('regFIO').value.trim();
             const pass = document.getElementById('regPassword').value.trim();
-            if (!phone || !pass) return alert('Телефон и пароль обязательны');
+            if (!phone || !pass) {
+                document.getElementById('regError').textContent = 'Телефон и пароль обязательны';
+                return;
+            }
+            const btn = document.getElementById('registerBtn');
+            btn.disabled = true;
+            showLoading();
             jsonp(apiUrl + '?action=clientRegister&login=' + encodeURIComponent(phone) +
                  '&password=' + encodeURIComponent(pass) +
                  '&phone=' + encodeURIComponent(phone) +
                  '&email=' + encodeURIComponent(email) +
                  '&fio=' + encodeURIComponent(fio), function(d) {
+                btn.disabled = false;
+                hideLoading();
                 if (d.success) {
                     alert('Регистрация успешна! Теперь войдите.');
                     showLogin();
+                    document.getElementById('loginInput').value = phone;
+                    document.getElementById('passwordInput').value = '';
+                    document.getElementById('regError').textContent = '';
                 } else {
-                    document.getElementById('regStatus').textContent = d.message;
+                    document.getElementById('regError').textContent = d.message || 'Ошибка регистрации';
                 }
             });
         }
 
-        function showCabinet() {
-            hide('authScreen');
-            show('cabinetScreen');
-            loadProfile();
-            loadMyCerts();
-            loadUsedCerts();
-        }
-
+        // ========== ЗАГРУЗКА ПРОФИЛЯ ==========
         function loadProfile() {
+            showLoading();
             jsonp(apiUrl + '?action=clientData&user=' + encodeURIComponent(currentClient), function(d) {
-                if (d.fio) document.getElementById('fioDisplay').textContent = d.fio;
+                hideLoading();
+                if (d.error) return;
                 document.getElementById('nicknameDisplay').textContent = d.nickname || 'Пользователь';
-                if (d.avatar) document.getElementById('avatarImg').src = d.avatar;
+                document.getElementById('fioDisplay').textContent = d.fio || '';
+                if (d.avatar) {
+                    document.getElementById('avatarImg').src = d.avatar;
+                } else {
+                    document.getElementById('avatarImg').src = ''; // оставлю пустым
+                }
             });
         }
 
+        // ========== ЗАГРУЗКА СЕРТИФИКАТОВ ==========
         function loadMyCerts() {
+            showLoading();
             jsonp(apiUrl + '?action=clientCerts&user=' + encodeURIComponent(currentClient), function(d) {
-                const tbody = document.querySelector('#myCertsTable tbody');
-                tbody.innerHTML = '';
-                (d.codes || []).filter(c => c.status !== 'Активирован').forEach(c => {
-                    tbody.innerHTML += `<tr>
-                        <td><strong>${c.code}</strong></td>
-                        <td><span class="badge badge-inactive">Не активирован</span></td>
-                        <td><button onclick="showQr('${c.code}')">QR</button></td>
-                    </tr>`;
-                });
+                hideLoading();
+                const activeDiv = document.getElementById('activeCerts');
+                const usedDiv = document.getElementById('usedCerts');
+                activeDiv.innerHTML = '';
+                usedDiv.innerHTML = '';
+                const codes = d.codes || [];
+                const active = codes.filter(c => c.status !== 'Активирован');
+                const used = codes.filter(c => c.status === 'Активирован');
+
+                if (active.length === 0) {
+                    activeDiv.innerHTML = '<p style="color:var(--text-secondary);">Нет доступных сертификатов</p>';
+                } else {
+                    const table = document.createElement('table');
+                    table.innerHTML = `<thead><tr><th>Код</th><th>Статус</th><th>Действие</th></tr></thead>`;
+                    const tbody = document.createElement('tbody');
+                    active.forEach(c => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><strong>${c.code}</strong></td>
+                            <td><span class="badge badge-inactive">Не активирован</span></td>
+                            <td><button class="small-btn" onclick="showQr('${c.code}')">📷 QR</button></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                    table.appendChild(tbody);
+                    activeDiv.appendChild(table);
+                }
+
+                if (used.length === 0) {
+                    usedDiv.innerHTML = '<p style="color:var(--text-secondary);">Нет использованных сертификатов</p>';
+                } else {
+                    const table = document.createElement('table');
+                    table.innerHTML = `<thead><tr><th>Код</th><th>Дата создания</th></tr></thead>`;
+                    const tbody = document.createElement('tbody');
+                    used.forEach(c => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `<td><strong>${c.code}</strong></td><td>${c.date}</td>`;
+                        tbody.appendChild(tr);
+                    });
+                    table.appendChild(tbody);
+                    usedDiv.appendChild(table);
+                }
             });
         }
 
-        function loadUsedCerts() {
-            jsonp(apiUrl + '?action=clientCerts&user=' + encodeURIComponent(currentClient), function(d) {
-                const tbody = document.querySelector('#myUsedCertsTable tbody');
-                tbody.innerHTML = '';
-                (d.codes || []).filter(c => c.status === 'Активирован').forEach(c => {
-                    tbody.innerHTML += `<tr><td><strong>${c.code}</strong></td><td>${c.date}</td></tr>`;
-                });
-            });
-        }
-
+        // ========== ПОКАЗ QR ==========
         function showQr(code) {
             const url = window.location.origin + window.location.pathname.replace('client.html','index.html') + '?code=' + code;
             window.open(url, '_blank');
         }
 
+        // ========== РЕДАКТИРОВАНИЕ ПРОФИЛЯ ==========
         function editProfile() {
             const nick = prompt('Никнейм:', document.getElementById('nicknameDisplay').textContent);
             const avatar = prompt('Ссылка на аватар:', document.getElementById('avatarImg').src);
             if (nick === null && avatar === null) return;
+            showLoading();
             jsonp(apiUrl + '?action=clientUpdate&user=' + encodeURIComponent(currentClient) +
                  '&nickname=' + encodeURIComponent(nick || '') +
                  '&avatar=' + encodeURIComponent(avatar || ''), function(d) {
+                hideLoading();
                 if (d.success) {
                     loadProfile();
-                } else alert(d.message);
+                } else {
+                    alert(d.message || 'Ошибка обновления');
+                }
             });
         }
 
+        // ========== ВЫХОД ==========
         function logout() {
             currentClient = null;
             localStorage.removeItem('client_login');
             localStorage.removeItem('client_pass');
-            hide('cabinetScreen');
-            show('authScreen');
+            showLogin();
         }
 
-        // Автовход
+        // ========== АВТОВХОД ==========
         (function() {
             const savedLogin = localStorage.getItem('client_login');
             const savedPass = localStorage.getItem('client_pass');
             if (savedLogin && savedPass) {
+                currentClient = savedLogin;
+                // проверим валидность
                 jsonp(apiUrl + '?action=login&user=' + encodeURIComponent(savedLogin) + '&password=' + encodeURIComponent(savedPass), function(d) {
-                    if (d.success && d.rights === 'client') {
-                        currentClient = savedLogin;
+                    if (d.success) {
                         showCabinet();
+                    } else {
+                        localStorage.removeItem('client_login');
+                        localStorage.removeItem('client_pass');
+                        showLogin();
                     }
                 });
+            } else {
+                showLogin();
             }
         })();
     </script>
