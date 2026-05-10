@@ -184,6 +184,7 @@
             <li><button onclick="navigate('home')" id="navHome">🏠 Главная</button></li>
             <li id="certsMenuItem"><button onclick="navigate('certs')" id="navCerts">💎 Сертификаты</button></li>
             <li><button onclick="navigate('logs')" id="navLogs">📋 Логи</button></li>
+            <li id="usersMenuItem"><button onclick="navigate('users')" id="navUsers">👥 Пользователи</button></li>
             <li><button onclick="logout()">🚪 Выйти</button></li>
         </ul>
     </nav>
@@ -255,6 +256,32 @@
                     </table>
                 </div>
                 <button class="primary" onclick="loadLogs()" style="margin-top:16px;">Обновить</button>
+            </div>
+        </div>
+
+        <!-- Users page -->
+        <div id="usersPage" class="page">
+            <div class="card">
+                <h2>Управление пользователями</h2>
+                <div style="margin-bottom: 20px;">
+                    <h3>Добавить пользователя</h3>
+                    <input type="text" id="newLogin" placeholder="Логин">
+                    <input type="password" id="newPass" placeholder="Пароль">
+                    <select id="newRights">
+                        <option value="volonter">Volonter</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                    <input type="email" id="newEmail" placeholder="Email">
+                    <input type="text" id="newNick" placeholder="Nickname">
+                    <button class="primary" onclick="addUser()">Создать</button>
+                </div>
+                <div class="table-wrap">
+                    <table id="usersTable">
+                        <thead><tr><th>Логин</th><th>Права</th><th>Email</th><th>Nickname</th><th>Действия</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <button class="primary" onclick="loadUsers()" style="margin-top:12px;">Обновить</button>
             </div>
         </div>
     </div>
@@ -330,21 +357,23 @@
 
     <script>
         // ========== КОНФИГУРАЦИЯ ==========
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbx6QKf8HkdmyS6US5wfvxTtXV68U38xAffjtcAo6GaH7yxkRxePVFuzTHj4TK-pz1OY/exec';   // <-- замените на свой URL
+        const apiUrl = 'https://script.google.com/macros/s/AKfycbxTrtoQFPfGfj1Defp3xTKDPA71rt_-N0lfrtpcxnj1EmMmIJ0upBv--rZ8wf5_jeK0/exec';   // <-- замените на свой URL
         // Пароли только на сервере
 
         let currentUser = null;
+        let currentUserRights = null;
         let currentCertTab = 'active';
         let qrCode = null;
         let generatingCert = false;
-        let allCerts = []; // для поиска
+        let allCerts = [];
 
         const sidebar = document.getElementById('sidebar');
         const pages = {
             login: document.getElementById('loginPage'),
             home: document.getElementById('homePage'),
             certs: document.getElementById('certsPage'),
-            logs: document.getElementById('logsPage')
+            logs: document.getElementById('logsPage'),
+            users: document.getElementById('usersPage')
         };
 
         // ========== TOAST ==========
@@ -376,9 +405,11 @@
             document.getElementById('navHome').classList.toggle('active', name === 'home');
             document.getElementById('navCerts').classList.toggle('active', name === 'certs');
             document.getElementById('navLogs').classList.toggle('active', name === 'logs');
+            document.getElementById('navUsers').classList.toggle('active', name === 'users');
             if (name === 'home') updateHome();
             if (name === 'certs') loadCertificatesForTab();
             if (name === 'logs') loadLogs();
+            if (name === 'users') loadUsers();
             closeSidebar();
         }
         function navigate(name) { showPage(name); }
@@ -396,6 +427,7 @@
                 btn.disabled = false;
                 if (d.success) {
                     currentUser = user;
+                    currentUserRights = d.rights;
                     localStorage.setItem('cert_user', user);
                     localStorage.setItem('cert_logged_in', 'true');
                     document.getElementById('loginStatus').textContent = '';
@@ -410,6 +442,7 @@
         function logout() {
             if (confirm('Выйти из системы?')) {
                 currentUser = null;
+                currentUserRights = null;
                 localStorage.removeItem('cert_user');
                 localStorage.removeItem('cert_logged_in');
                 pages.login.classList.add('active');
@@ -421,7 +454,9 @@
 
         function initUI() {
             pages.login.classList.remove('active');
-            document.getElementById('certsMenuItem').classList.toggle('hidden', currentUser !== 'root');
+            const isAdmin = (currentUserRights === 'admin');
+            document.getElementById('certsMenuItem').classList.toggle('hidden', !isAdmin);
+            document.getElementById('usersMenuItem').classList.toggle('hidden', !isAdmin);
             showPage('home');
         }
 
@@ -537,20 +572,18 @@
             galleryInput.value = '';
         }
         function setQrCode(raw) {
-    let code = raw;
-    // Если результат похож на URL, пытаемся вытащить параметр ?code=...
-    try {
-        const url = new URL(raw);
-        const param = url.searchParams.get('code');
-        if (param) code = param;          // берём чистый код
-    } catch (e) {
-        // это не URL, значит просто код (например, GF001)
-    }
-    qrCode = code;
-    document.getElementById('codeDisplay').textContent = code;
-    checkStatusForActivation(code);
-    window.history.replaceState(null, '', '?code=' + encodeURIComponent(code));
-}
+            let code = raw;
+            try {
+                const url = new URL(raw);
+                const param = url.searchParams.get('code');
+                if (param) code = param;
+            } catch (e) {}
+            qrCode = code;
+            document.getElementById('codeDisplay').textContent = code;
+            checkStatusForActivation(code);
+            window.history.replaceState(null, '', '?code=' + encodeURIComponent(code));
+        }
+
         // ========== СЕРТИФИКАТЫ ==========
         function switchCertTab(tab) {
             currentCertTab = tab;
@@ -583,7 +616,7 @@
 
                 codes.forEach(item => {
                     const tr = document.createElement('tr');
-                    const issueBtn = (currentUser === 'root') ?
+                    const issueBtn = (currentUserRights === 'admin') ?
                         `<button class="small-btn" onclick="toggleIssue('${item.code}')">${item.issued === 'Отдан' ? '📦 На склад' : '📤 Отдать'}</button>` : '';
                     tr.innerHTML = `
                         <td><strong>${item.code}</strong></td>
@@ -595,11 +628,11 @@
                             <button class="small-btn" onclick="showQr('${item.code}')">📷 QR</button>
                             <button class="small-btn" onclick="generateCertImage('${item.code}')">🎨 Сертификат</button>
                             ${(item.status === 'Активирован') ? `<button class="small-btn danger" onclick="rollback('${item.code}')">↩️ Восстановить</button>` : ''}
-                            ${(currentUser === 'root') ? `<button class="small-btn danger" onclick="deleteCert('${item.code}')">🗑️ Удалить</button>` : ''}
+                            ${(currentUserRights === 'admin') ? `<button class="small-btn danger" onclick="deleteCert('${item.code}')">🗑️ Удалить</button>` : ''}
                         </td>`;
                     tbody.appendChild(tr);
                 });
-                filterCerts(); // применить поиск после загрузки
+                filterCerts();
             });
         }
         function toggleIssue(code) {
@@ -685,51 +718,31 @@
                     return;
                 }
 
-                canvas.width = 800;
-                canvas.height = 500;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#1c1c1e';
-                ctx.fillRect(0, 0, 800, 500);
-                ctx.strokeStyle = '#ff9f0a';
-                ctx.lineWidth = 3;
-                ctx.strokeRect(10, 10, 780, 480);
+                const bgImg = new Image();
+                bgImg.crossOrigin = 'Anonymous';
+                bgImg.src = 'https://i.oneme.ru/i?r=BTE2sh_eZW7g8kugOdIm2Not6cSqld053BrGhh5xQg0L-6heFIFzMaeTRu44FG2MMX4';
 
-                const logo = new Image();
-                logo.crossOrigin = 'Anonymous';
-                logo.src = 'https://sun9-52.userapi.com/s/v1/ig2/FU7bN5q2jKV6WvIw1MQODNfSCOpVecMzuP5FQdOyrofQcIcs-bIRdAjlPtoHyuC1uVQI4rGjL04epRK863qokx-Q.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&cs=1024x0';
-                logo.onload = function() {
-                    ctx.drawImage(logo, 30, 30, 64, 64);
-                    addTextAndQR();
-                };
-                logo.onerror = function() { addTextAndQR(); };
-
-                function addTextAndQR() {
-                    ctx.fillStyle = '#ffffff';
-                    ctx.font = 'bold 28px Arial';
-                    ctx.fillText('Подарочный сертификат', 120, 70);
-                    ctx.font = '20px Arial';
-                    ctx.fillText('Самоцветы DEV', 120, 100);
-                    ctx.font = '24px Arial';
-                    ctx.fillText('Код: ' + code, 40, 160);
-                    ctx.fillText('Срок действия: ' + item.duration, 40, 200);
-                    if (item.comment) {
-                        ctx.font = '18px Arial';
-                        ctx.fillText('Комментарий: ' + item.comment, 40, 240);
-                    }
+                bgImg.onload = function() {
+                    canvas.width = bgImg.width;
+                    canvas.height = bgImg.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(bgImg, 0, 0);
 
                     try {
-                        if (typeof qrcode === 'undefined') throw new Error('Библиотека QR не загружена. Обновите страницу (Ctrl+F5).');
+                        if (typeof qrcode === 'undefined') throw new Error('Библиотека QR не загружена');
                         const qrUrl = window.location.origin + window.location.pathname + '?code=' + code;
                         const qr = qrcode(0, 'M');
                         qr.addData(qrUrl);
                         qr.make();
                         const moduleCount = qr.getModuleCount();
-                        const tileSize = Math.floor(200 / moduleCount);
-                        const qrSize = moduleCount * tileSize;
-                        const qrX = 580, qrY = 280;
+                        const qrSize = 180; // размер квадрата под QR (подбери при необходимости)
+                        const tileSize = Math.floor(qrSize / moduleCount);
+                        const actualQrSize = moduleCount * tileSize;
+                        const qrX = 590; // координаты зелёного квадрата (подбери под свой макет)
+                        const qrY = 280;
 
                         ctx.fillStyle = '#ffffff';
-                        ctx.fillRect(qrX - 4, qrY - 4, qrSize + 8, qrSize + 8);
+                        ctx.fillRect(qrX - 4, qrY - 4, actualQrSize + 8, actualQrSize + 8);
 
                         for (let row = 0; row < moduleCount; row++) {
                             for (let col = 0; col < moduleCount; col++) {
@@ -749,10 +762,16 @@
                         errorDiv.textContent = 'Ошибка при создании QR-кода: ' + e.message;
                         errorDiv.style.display = 'block';
                         spinner.style.display = 'none';
-                        console.error(e);
                     }
                     generatingCert = false;
-                }
+                };
+
+                bgImg.onerror = function() {
+                    errorDiv.textContent = 'Не удалось загрузить фоновое изображение. Проверьте ссылку и CORS.';
+                    errorDiv.style.display = 'block';
+                    spinner.style.display = 'none';
+                    generatingCert = false;
+                };
             });
         }
         function closeCertDownload() {
@@ -825,12 +844,91 @@
             });
         }
 
+        // ========== ПОЛЬЗОВАТЕЛИ ==========
+        function loadUsers() {
+            jsonp(apiUrl + '?action=userList&user=' + userParam(), function(d) {
+                const tbody = document.querySelector('#usersTable tbody');
+                tbody.innerHTML = '';
+                (d.users || []).forEach(u => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${u.login}</td>
+                        <td>${u.rights}</td>
+                        <td>${u.email}</td>
+                        <td>${u.nickname}</td>
+                        <td>
+                            <button class="small-btn" onclick="editUserForm('${u.login}','${u.rights}','${u.email}','${u.nickname}')">✏️</button>
+                            <button class="small-btn danger" onclick="deleteUser('${u.login}')">🗑️</button>
+                        </td>`;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+        function addUser() {
+            const login = document.getElementById('newLogin').value.trim();
+            const pass = document.getElementById('newPass').value.trim();
+            const rights = document.getElementById('newRights').value;
+            const email = document.getElementById('newEmail').value.trim();
+            const nick = document.getElementById('newNick').value.trim();
+            if (!login || !pass) return showToast('Логин и пароль обязательны', 'error');
+            jsonp(apiUrl + '?action=userAdd&user=' + userParam() +
+                 '&newLogin=' + encodeURIComponent(login) +
+                 '&newPass=' + encodeURIComponent(pass) +
+                 '&newRights=' + encodeURIComponent(rights) +
+                 '&newEmail=' + encodeURIComponent(email) +
+                 '&newNick=' + encodeURIComponent(nick), function(d) {
+                if (d.success) {
+                    loadUsers();
+                    showToast('Пользователь создан', 'success');
+                } else showToast(d.message, 'error');
+            });
+        }
+        function deleteUser(login) {
+            if (login === 'root') return showToast('Нельзя удалить root', 'error');
+            if (!confirm('Удалить пользователя ' + login + '?')) return;
+            jsonp(apiUrl + '?action=userDelete&user=' + userParam() + '&delLogin=' + encodeURIComponent(login), function(d) {
+                if (d.success) {
+                    loadUsers();
+                    showToast('Пользователь удалён', 'success');
+                } else showToast(d.message, 'error');
+            });
+        }
+        function editUserForm(login, rights, email, nick) {
+            const newPass = prompt('Новый пароль (оставьте пустым, чтобы не менять):');
+            const newRights = prompt('Права (admin/volonter):', rights);
+            const newEmail = prompt('Email:', email);
+            const newNick = prompt('Nickname:', nick);
+            if (newRights === null) return; // отмена
+            jsonp(apiUrl + '?action=userUpdate&user=' + userParam() +
+                 '&updLogin=' + encodeURIComponent(login) +
+                 '&updPass=' + encodeURIComponent(newPass || '') +
+                 '&updRights=' + encodeURIComponent(newRights || rights) +
+                 '&updEmail=' + encodeURIComponent(newEmail || '') +
+                 '&updNick=' + encodeURIComponent(newNick || ''), function(d) {
+                if (d.success) {
+                    loadUsers();
+                    showToast('Данные обновлены', 'success');
+                } else showToast(d.message, 'error');
+            });
+        }
+
         // ========== ИНИЦИАЛИЗАЦИЯ ==========
         (function() {
             const saved = localStorage.getItem('cert_logged_in') === 'true' ? localStorage.getItem('cert_user') : null;
-            if (saved && (saved === 'root' || saved.startsWith('volonter'))) {
-                currentUser = saved;
-                initUI();
+            if (saved) {
+                // Попробуем автоматически войти под сохранённым пользователем
+                jsonp(apiUrl + '?action=login&user=' + encodeURIComponent(saved) + '&password=', function(d) {
+                    // просто проверим, что пользователь существует, права не важны
+                    if (d.success || d.message === "Неверный пароль") {
+                        // Значит пользователь существует, сохраняем права позже
+                        currentUser = saved;
+                        currentUserRights = d.rights || 'volonter';
+                        initUI();
+                    } else {
+                        localStorage.removeItem('cert_logged_in');
+                        pages.login.classList.add('active');
+                    }
+                });
             } else {
                 pages.login.classList.add('active');
             }
