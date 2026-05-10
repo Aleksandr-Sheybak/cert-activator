@@ -98,10 +98,29 @@
         button.small-btn {
             padding: 6px 12px; font-size: 13px; border-radius: 10px; background: rgba(58,58,60,0.8);
             color: #fff; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+            transition: background 0.2s;
         }
+        button.small-btn:hover { background: rgba(74,74,76,0.9); }
         button.danger { background: linear-gradient(135deg, var(--danger), #cc372b); color: #fff; }
 
         .hidden { display: none !important; }
+
+        /* Вкладки */
+        .tabs {
+            display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 8px;
+        }
+        .tab {
+            background: transparent;   /* фикс белого фона */
+            border: none;
+            color: var(--text-secondary);
+            padding: 8px 20px;
+            font-size: 15px; font-weight: 500; cursor: pointer;
+            border-radius: 12px; transition: background 0.2s, color 0.2s;
+        }
+        .tab.active {
+            background: var(--accent);
+            color: #000;
+        }
 
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -151,6 +170,9 @@
 
         #confettiCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
 
+        /* Фикс таблицы, чтобы не расползалась */
+        .table-wrap { overflow-x: auto; }
+
         @media (min-width: 768px) {
             .sidebar { transform: translateX(0); }
             .main { margin-left: var(--sidebar-width); }
@@ -184,6 +206,7 @@
     </nav>
 
     <div class="main" id="mainContent">
+        <!-- Login page -->
         <div id="loginPage" class="page active">
             <div class="card" style="max-width: 420px; margin: 0 auto; text-align: center;">
                 <img class="logo-img" src="https://sun9-52.userapi.com/s/v1/ig2/FU7bN5q2jKV6WvIw1MQODNfSCOpVecMzuP5FQdOyrofQcIcs-bIRdAjlPtoHyuC1uVQI4rGjL04epRK863qokx-Q.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&cs=1024x0" style="width:80px; border-radius:50%; margin-bottom:16px;">
@@ -195,6 +218,7 @@
             </div>
         </div>
 
+        <!-- Dashboard page -->
         <div id="homePage" class="page">
             <h2 style="margin-bottom:20px;">📊 Дашборд</h2>
             <div class="dashboard-grid" id="dashboardStats"></div>
@@ -210,6 +234,7 @@
             </div>
         </div>
 
+        <!-- Certs page -->
         <div id="certsPage" class="page">
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -219,7 +244,7 @@
                         <button class="primary" onclick="exportCertsCSV()" style="background:linear-gradient(135deg, #0a84ff, #0066cc);">📥 Экспорт CSV</button>
                     </div>
                 </div>
-                <div class="tabs" style="display:flex; gap:8px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+                <div class="tabs">
                     <button class="tab active" onclick="switchCertTab('active')">Активные <span id="activeCount"></span></button>
                     <button class="tab" onclick="switchCertTab('archive')">Архив <span id="archiveCount"></span></button>
                 </div>
@@ -235,6 +260,7 @@
             </div>
         </div>
 
+        <!-- Logs page -->
         <div id="logsPage" class="page">
             <div class="card">
                 <h2 style="margin-bottom:16px;">📋 Журнал действий</h2>
@@ -249,6 +275,7 @@
             </div>
         </div>
 
+        <!-- Users page -->
         <div id="usersPage" class="page">
             <div class="card">
                 <h2>👥 Управление пользователями</h2>
@@ -275,7 +302,8 @@
         </div>
     </div>
 
-    <!-- Модальные окна -->
+    <!-- Модальные окна (create, confirm, details, qr, cert download, issue, scanner) полностью как раньше -->
+    <!-- Я оставил их без изменений, вставлю только нужные для краткости -->
     <div id="createModal" class="modal hidden">
         <div class="modal-content">
             <button class="close-btn" onclick="closeCreateModal()">&times;</button>
@@ -331,6 +359,7 @@
         </div>
     </div>
 
+    <!-- Графический сертификат (полный код) -->
     <div id="certDownloadModal" class="modal hidden">
         <div class="modal-content modal-lg">
             <button class="close-btn" onclick="closeCertDownload()">&times;</button>
@@ -345,6 +374,7 @@
         </div>
     </div>
 
+    <!-- Issue modal -->
     <div id="issueModal" class="modal hidden">
         <div class="modal-content">
             <button class="close-btn" onclick="closeIssueModal()">&times;</button>
@@ -357,6 +387,7 @@
         </div>
     </div>
 
+    <!-- Scanner modal -->
     <div id="scannerModal" class="modal hidden">
         <div class="modal-content">
             <button class="close-btn" onclick="closeScanner()">&times;</button>
@@ -374,8 +405,8 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
-        // ========== КОНФИГ ==========
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbypj_clnwGOOdk2hwY-vhVIMA_8-GnCrkTVpEOp5VEABwU9HkeFVWyoJOjzvWtGJBA_/exec';   // <-- замените на свой URL
+        // ========== КОНФИГУРАЦИЯ ==========
+        const apiUrl = 'ВАШ_API_URL';   // <-- замените на свой URL
         let currentUser = null, currentUserRights = null;
         let currentCertTab = 'active';
         let qrCode = null, generatingCert = false, allCerts = [];
@@ -392,6 +423,7 @@
             users: document.getElementById('usersPage')
         };
 
+        // ========== СМЕНА АКЦЕНТА ==========
         function setAccent(color, hover, dot) {
             document.documentElement.style.setProperty('--accent', color);
             document.documentElement.style.setProperty('--accent-hover', hover);
@@ -400,6 +432,7 @@
             dot.classList.add('active');
         }
 
+        // ========== ЗВУКИ ==========
         function playSound(type) {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -410,6 +443,7 @@
             } catch(e) {}
         }
 
+        // ========== КОНФЕТТИ ==========
         function launchConfetti() {
             const canvas = document.getElementById('confettiCanvas');
             canvas.classList.remove('hidden');
@@ -448,9 +482,11 @@
             requestAnimationFrame(animate);
         }
 
+        // ========== СПИННЕР ==========
         function showGlobalSpinner() { globalSpinner.classList.remove('hidden'); }
         function hideGlobalSpinner() { globalSpinner.classList.add('hidden'); }
 
+        // ========== TOAST ==========
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -464,6 +500,7 @@
             }, 3500);
         }
 
+        // ========== JSONP ==========
         function jsonp(url, callback) {
             var script = document.createElement('script');
             var cb = 'jp_' + Math.random().toString(36).substr(2, 9);
@@ -474,6 +511,7 @@
 
         function userParam() { return currentUser || 'неизвестный'; }
 
+        // ========== НАВИГАЦИЯ ==========
         function showPage(name) {
             Object.values(pages).forEach(p => p.classList.remove('active'));
             if (pages[name]) pages[name].classList.add('active');
@@ -492,6 +530,7 @@
         function toggleSidebar() { sidebar.classList.toggle('open'); }
         function closeSidebar() { sidebar.classList.remove('open'); }
 
+        // ========== КАСТОМНОЕ ПОДТВЕРЖДЕНИЕ ==========
         let confirmCallback = null;
         function showConfirm(title, message, onYes) {
             document.getElementById('confirmTitle').textContent = title;
@@ -508,6 +547,7 @@
             confirmCallback = null;
         }
 
+        // ========== АВТОРИЗАЦИЯ ==========
         function login() {
             const user = document.getElementById('loginInput').value.trim();
             const pass = document.getElementById('passwordInput').value.trim();
@@ -554,6 +594,7 @@
             showPage('home');
         }
 
+        // ========== ДАШБОРД ==========
         function loadDashboard() {
             jsonp(apiUrl + '?action=list', function(d) {
                 const codes = d.codes || [];
@@ -570,6 +611,7 @@
             });
         }
 
+        // ========== ГЛАВНАЯ (QR) ==========
         function updateHome() {
             qrCode = new URLSearchParams(window.location.search).get('code') || qrCode;
             if (qrCode) {
@@ -829,11 +871,110 @@
             });
         }
 
-        // ========== ГРАФИЧЕСКИЙ СЕРТИФИКАТ ==========
-        function generateCertImage(code) { /* ... код без изменений ... */ }
-        function closeCertDownload() { /* ... */ }
-        function downloadCertImage() { /* ... */ }
-        function copyCertLink() { /* ... */ }
+        // ========== ГРАФИЧЕСКИЙ СЕРТИФИКАТ (полный) ==========
+        function generateCertImage(code) {
+            if (generatingCert) return;
+            generatingCert = true;
+            const modal = document.getElementById('certDownloadModal');
+            const spinner = document.getElementById('certSpinner');
+            const canvas = document.getElementById('certCanvas');
+            const errorDiv = document.getElementById('certError');
+            const btnDownload = document.getElementById('btnDownloadCert');
+            const btnCopy = document.getElementById('btnCopyCertLink');
+
+            modal.classList.remove('hidden');
+            spinner.style.display = 'block';
+            canvas.style.display = 'none';
+            errorDiv.style.display = 'none';
+            btnDownload.disabled = true;
+            btnCopy.disabled = true;
+
+            jsonp(apiUrl + '?action=list', function(d) {
+                const item = (d.codes || []).find(c => c.code === code);
+                if (!item) {
+                    errorDiv.textContent = 'Сертификат не найден в базе.';
+                    errorDiv.style.display = 'block';
+                    spinner.style.display = 'none';
+                    generatingCert = false;
+                    return;
+                }
+
+                const bgImg = new Image();
+                bgImg.crossOrigin = 'Anonymous';
+                bgImg.src = 'https://i.oneme.ru/i?r=BTE2sh_eZW7g8kugOdIm2Not6cSqld053BrGhh5xQg0L-6heFIFzMaeTRu44FG2MMX4';
+
+                bgImg.onload = function() {
+                    canvas.width = bgImg.width;
+                    canvas.height = bgImg.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(bgImg, 0, 0);
+
+                    try {
+                        if (typeof qrcode === 'undefined') throw new Error('Библиотека QR не загружена');
+                        const qrUrl = window.location.origin + window.location.pathname + '?code=' + code;
+                        const qr = qrcode(0, 'M');
+                        qr.addData(qrUrl);
+                        qr.make();
+                        const moduleCount = qr.getModuleCount();
+                        const qrSize = 264;
+                        const tileSize = Math.floor(qrSize / moduleCount);
+                        const actualQrSize = moduleCount * tileSize;
+                        const qrX = 1613;
+                        const qrY = 326;
+
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(qrX - 4, qrY - 4, actualQrSize + 8, actualQrSize + 8);
+
+                        for (let row = 0; row < moduleCount; row++) {
+                            for (let col = 0; col < moduleCount; col++) {
+                                if (qr.isDark(row, col)) {
+                                    ctx.fillStyle = '#000000';
+                                    ctx.fillRect(qrX + col * tileSize, qrY + row * tileSize, tileSize, tileSize);
+                                }
+                            }
+                        }
+
+                        spinner.style.display = 'none';
+                        canvas.style.display = 'block';
+                        btnDownload.disabled = false;
+                        btnCopy.disabled = false;
+                        window._certCode = code;
+                    } catch (e) {
+                        errorDiv.textContent = 'Ошибка при создании QR-кода: ' + e.message;
+                        errorDiv.style.display = 'block';
+                        spinner.style.display = 'none';
+                    }
+                    generatingCert = false;
+                };
+
+                bgImg.onerror = function() {
+                    errorDiv.textContent = 'Не удалось загрузить фоновое изображение. Проверьте CORS.';
+                    errorDiv.style.display = 'block';
+                    spinner.style.display = 'none';
+                    generatingCert = false;
+                };
+            });
+        }
+        function closeCertDownload() {
+            document.getElementById('certDownloadModal').classList.add('hidden');
+            document.getElementById('certSpinner').style.display = 'none';
+            document.getElementById('certCanvas').style.display = 'none';
+            document.getElementById('certError').style.display = 'none';
+            generatingCert = false;
+        }
+        function downloadCertImage() {
+            const canvas = document.getElementById('certCanvas');
+            if (!canvas || canvas.style.display === 'none') return;
+            const link = document.createElement('a');
+            link.download = 'certificate_' + (window._certCode || 'unknown') + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        function copyCertLink() {
+            if (!window._certCode) return;
+            const url = window.location.origin + window.location.pathname + '?code=' + window._certCode;
+            navigator.clipboard.writeText(url).then(() => showToast('📋 Ссылка скопирована', 'success'));
+        }
 
         // ========== СОЗДАНИЕ ==========
         function generateRandomCode() {
