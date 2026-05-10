@@ -145,7 +145,6 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Toast notifications */
         .toast-container {
             position: fixed; bottom: 20px; right: 20px; z-index: 200;
             display: flex; flex-direction: column; gap: 8px;
@@ -160,14 +159,6 @@
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
-        }
-
-        /* Search input */
-        .search-box {
-            margin-bottom: 16px; display: flex; gap: 8px;
-        }
-        .search-box input {
-            flex: 1;
         }
 
         @media (min-width: 768px) {
@@ -210,9 +201,8 @@
                     <option value="volonter2">Volonter2</option>
                 </select>
                 <input type="password" id="passwordInput" placeholder="Пароль">
-                <button class="primary" id="loginBtn" onclick="login()" style="width:100%;">Войти</button>
+                <button class="primary" onclick="login()" style="width:100%;">Войти</button>
                 <div id="loginStatus" style="color:red; margin-top:12px;"></div>
-                <div id="loginBlockMessage" style="color:orange; margin-top:12px; display:none;"></div>
             </div>
         </div>
 
@@ -241,7 +231,7 @@
                     <button class="tab active" onclick="switchCertTab('active')">Активные <span id="activeCount"></span></button>
                     <button class="tab" onclick="switchCertTab('archive')">Архив <span id="archiveCount"></span></button>
                 </div>
-                <div class="search-box">
+                <div class="search-box" style="margin-bottom:16px;">
                     <input type="text" id="certSearch" placeholder="🔍 Поиск по коду..." oninput="filterCerts()">
                 </div>
                 <div class="table-wrap">
@@ -269,7 +259,7 @@
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- Модальные окна -->
     <!-- Create cert -->
     <div id="createModal" class="modal hidden">
         <div class="modal-content">
@@ -289,7 +279,7 @@
         </div>
     </div>
 
-    <!-- Details -->
+    <!-- Details modal -->
     <div id="detailsModal" class="modal hidden">
         <div class="modal-content modal-lg">
             <button class="close-btn" onclick="closeDetails()">&times;</button>
@@ -298,7 +288,7 @@
         </div>
     </div>
 
-    <!-- QR view -->
+    <!-- QR modal -->
     <div id="qrModal" class="modal hidden">
         <div class="modal-content">
             <button class="close-btn" onclick="closeQr()">&times;</button>
@@ -309,7 +299,7 @@
         </div>
     </div>
 
-    <!-- Graphic cert -->
+    <!-- Graphic cert modal -->
     <div id="certDownloadModal" class="modal hidden">
         <div class="modal-content modal-lg">
             <button class="close-btn" onclick="closeCertDownload()">&times;</button>
@@ -339,18 +329,15 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
-        // ========== CONFIGURATION ==========
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbyLdVPEemSDUpXU4X88So0G3nJc1dJCy0iZ59l_4H88ylH5Qtnj-rrc1I21CiWGzLzh/exec';   // <--- замените на ваш URL Apps Script
-        // Пароли теперь хранятся только в Apps Script
+        // ========== КОНФИГУРАЦИЯ ==========
+        const apiUrl = 'ВАШ_API_URL';   // <-- замените на свой URL
+        // Пароли только на сервере
 
         let currentUser = null;
         let currentCertTab = 'active';
         let qrCode = null;
         let generatingCert = false;
-        let allCerts = []; // кеш для поиска
-
-        const MAX_LOGIN_ATTEMPTS = 5;
-        const BLOCK_DURATION = 15 * 60 * 1000; // 15 минут
+        let allCerts = []; // для поиска
 
         const sidebar = document.getElementById('sidebar');
         const pages = {
@@ -360,7 +347,7 @@
             logs: document.getElementById('logsPage')
         };
 
-        // Toast
+        // ========== TOAST ==========
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -370,54 +357,52 @@
             setTimeout(() => toast.remove(), 3000);
         }
 
-        // ========== AUTH ==========
-        function getLoginBlockInfo() {
-            const blockedUntil = localStorage.getItem('login_blocked_until');
-            if (blockedUntil && Date.now() < parseInt(blockedUntil)) {
-                return { blocked: true, remaining: Math.ceil((parseInt(blockedUntil) - Date.now()) / 1000) };
-            }
-            return { blocked: false };
+        // ========== JSONP ==========
+        function jsonp(url, callback) {
+            var script = document.createElement('script');
+            var cb = 'jp_' + Math.random().toString(36).substr(2, 9);
+            window[cb] = function(d) { delete window[cb]; script.remove(); callback(d); };
+            script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
+            document.body.appendChild(script);
         }
 
-        function login() {
-            const blockInfo = getLoginBlockInfo();
-            if (blockInfo.blocked) {
-                document.getElementById('loginBlockMessage').style.display = 'block';
-                document.getElementById('loginBlockMessage').textContent = `Слишком много попыток. Попробуйте через ${Math.ceil(blockInfo.remaining / 60)} мин.`;
-                return;
-            }
+        function userParam() { return currentUser || 'неизвестный'; }
 
+        // ========== НАВИГАЦИЯ ==========
+        function showPage(name) {
+            Object.values(pages).forEach(p => p.classList.remove('active'));
+            if (pages[name]) pages[name].classList.add('active');
+            document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
+            document.getElementById('navHome').classList.toggle('active', name === 'home');
+            document.getElementById('navCerts').classList.toggle('active', name === 'certs');
+            document.getElementById('navLogs').classList.toggle('active', name === 'logs');
+            if (name === 'home') updateHome();
+            if (name === 'certs') loadCertificatesForTab();
+            if (name === 'logs') loadLogs();
+            closeSidebar();
+        }
+        function navigate(name) { showPage(name); }
+        function toggleSidebar() { sidebar.classList.toggle('open'); }
+        function closeSidebar() { sidebar.classList.remove('open'); }
+
+        // ========== АВТОРИЗАЦИЯ ==========
+        function login() {
             const user = document.getElementById('userSelect').value;
             const pass = document.getElementById('passwordInput').value.trim();
             if (!pass) return;
-            const loginBtn = document.getElementById('loginBtn');
-            loginBtn.disabled = true;
-
+            const btn = document.querySelector('#loginPage button.primary');
+            btn.disabled = true;
             jsonp(apiUrl + '?action=login&user=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass), function(d) {
-                loginBtn.disabled = false;
+                btn.disabled = false;
                 if (d.success) {
                     currentUser = user;
                     localStorage.setItem('cert_user', user);
                     localStorage.setItem('cert_logged_in', 'true');
-                    localStorage.removeItem('login_attempts');
-                    localStorage.removeItem('login_blocked_until');
                     document.getElementById('loginStatus').textContent = '';
-                    document.getElementById('loginBlockMessage').style.display = 'none';
                     initUI();
                     showToast('Добро пожаловать, ' + user + '!', 'success');
                 } else {
-                    let attempts = parseInt(localStorage.getItem('login_attempts') || '0') + 1;
-                    localStorage.setItem('login_attempts', attempts);
-                    if (attempts >= MAX_LOGIN_ATTEMPTS) {
-                        const blockUntil = Date.now() + BLOCK_DURATION;
-                        localStorage.setItem('login_blocked_until', blockUntil);
-                        document.getElementById('loginBlockMessage').style.display = 'block';
-                        document.getElementById('loginBlockMessage').textContent = 'Превышено число попыток. Вход заблокирован на 15 минут.';
-                        document.getElementById('loginStatus').textContent = '';
-                    } else {
-                        document.getElementById('loginStatus').textContent = `Неверный пароль. Осталось попыток: ${MAX_LOGIN_ATTEMPTS - attempts}`;
-                    }
-                    document.getElementById('passwordInput').value = '';
+                    document.getElementById('loginStatus').textContent = d.message || 'Неверный пароль';
                 }
             });
         }
@@ -430,6 +415,7 @@
                 pages.login.classList.add('active');
                 Object.values(pages).forEach(p => { if (p !== pages.login) p.classList.remove('active'); });
                 closeSidebar();
+                showToast('Вы вышли из системы', 'info');
             }
         }
 
@@ -439,9 +425,411 @@
             showPage('home');
         }
 
-        // ... остальные функции (навигация, QR, сертификаты и т.д.) остаются без изменений ...
-        // (Вставьте весь оставшийся код из предыдущего полного рабочего файла, начиная с функции showPage и до конца,
-        //  но с добавленными новыми возможностями: удаление, поиск, экспорт CSV, toast вместо alert)
+        // ========== ГЛАВНАЯ (QR) ==========
+        function updateHome() {
+            qrCode = new URLSearchParams(window.location.search).get('code') || qrCode;
+            if (qrCode) {
+                document.getElementById('codeDisplay').textContent = qrCode;
+                checkStatusForActivation(qrCode);
+            } else {
+                document.getElementById('codeDisplay').textContent = '—';
+                document.getElementById('qrStatus').textContent = '';
+                document.getElementById('activateBtn').classList.add('hidden');
+            }
+        }
+        function checkStatusForActivation(code) {
+            jsonp(apiUrl + '?action=status&code=' + code, function(d) {
+                const status = document.getElementById('qrStatus');
+                const btn = document.getElementById('activateBtn');
+                if (d.error || d.status === 'unknown') {
+                    status.innerHTML = '<span style="color:#ff453a;">❌ Неизвестный код</span>';
+                    btn.classList.add('hidden');
+                } else if (d.status === 'Активирован') {
+                    status.innerHTML = '<span style="color:#ff453a;">❌ Уже активирован</span>';
+                    btn.classList.add('hidden');
+                } else {
+                    status.innerHTML = '';
+                    btn.classList.remove('hidden');
+                }
+            });
+        }
+        function activateCode() {
+            if (!qrCode) return;
+            const btn = document.getElementById('activateBtn');
+            btn.disabled = true;
+            jsonp(apiUrl + '?action=activate&code=' + qrCode + '&user=' + userParam(), function(d) {
+                btn.disabled = false;
+                if (d.success) {
+                    document.getElementById('qrStatus').innerHTML = '<span style="color:#30d158;">✅ ' + d.message + '</span>';
+                    btn.classList.add('hidden');
+                    showToast(d.message, 'success');
+                    if (currentPage === 'certs') loadCertificatesForTab();
+                } else {
+                    document.getElementById('qrStatus').innerHTML = '<span style="color:#ff453a;">❌ ' + d.message + '</span>';
+                    showToast(d.message, 'error');
+                }
+            });
+        }
+
+        // ========== СКАНЕР И ГАЛЕРЕЯ ==========
+        const scannerModal = document.getElementById('scannerModal');
+        const scannerVideo = document.getElementById('scannerVideo');
+        const scannerStatus = document.getElementById('scannerStatus');
+        const galleryInput = document.getElementById('galleryInput');
+        let scanningActive = false;
+
+        function openScanner() {
+            scannerModal.classList.remove('hidden');
+            scanningActive = true;
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(stream => {
+                scannerVideo.srcObject = stream;
+                scannerVideo.play();
+                scanLoop();
+            })
+            .catch(() => { scannerStatus.textContent = 'Нет доступа к камере'; });
+        }
+        function scanLoop() {
+            if (!scanningActive) return;
+            if (scannerVideo.readyState === scannerVideo.HAVE_ENOUGH_DATA) {
+                const canvas = document.createElement('canvas');
+                canvas.width = scannerVideo.videoWidth;
+                canvas.height = scannerVideo.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(scannerVideo, 0, 0);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, canvas.width, canvas.height);
+                if (code) {
+                    scanningActive = false;
+                    closeScanner();
+                    setQrCode(code.data);
+                }
+            }
+            requestAnimationFrame(scanLoop);
+        }
+        function closeScanner() {
+            scanningActive = false;
+            if (scannerVideo.srcObject) {
+                scannerVideo.srcObject.getTracks().forEach(t => t.stop());
+            }
+            scannerModal.classList.add('hidden');
+        }
+        function openGallery() { galleryInput.click(); }
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    canvas.getContext('2d').drawImage(img, 0, 0);
+                    const imageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, canvas.width, canvas.height);
+                    if (code) setQrCode(code.data);
+                    else alert('QR не найден');
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+            galleryInput.value = '';
+        }
+        function setQrCode(code) {
+            qrCode = code;
+            document.getElementById('codeDisplay').textContent = code;
+            checkStatusForActivation(code);
+            window.history.replaceState(null, '', '?code=' + code);
+        }
+
+        // ========== СЕРТИФИКАТЫ ==========
+        function switchCertTab(tab) {
+            currentCertTab = tab;
+            document.querySelectorAll('.tab').forEach((b, idx) => {
+                b.classList.toggle('active', (idx === 0 && tab === 'active') || (idx === 1 && tab === 'archive'));
+            });
+            loadCertificatesForTab();
+        }
+        function filterCerts() {
+            const search = document.getElementById('certSearch').value.trim().toLowerCase();
+            const rows = document.querySelectorAll('#certsTable tbody tr');
+            rows.forEach(tr => {
+                const code = tr.cells[0].textContent.toLowerCase();
+                tr.style.display = code.includes(search) ? '' : 'none';
+            });
+        }
+        function loadCertificatesForTab() {
+            jsonp(apiUrl + '?action=list', function(d) {
+                const tbody = document.querySelector('#certsTable tbody');
+                tbody.innerHTML = '';
+                allCerts = d.codes || [];
+                let codes = allCerts;
+                if (currentCertTab === 'active') {
+                    codes = codes.filter(c => c.status !== 'Активирован');
+                } else {
+                    codes = codes.filter(c => c.status === 'Активирован');
+                }
+                document.getElementById('activeCount').textContent = `(${allCerts.filter(c => c.status !== 'Активирован').length})`;
+                document.getElementById('archiveCount').textContent = `(${allCerts.filter(c => c.status === 'Активирован').length})`;
+
+                codes.forEach(item => {
+                    const tr = document.createElement('tr');
+                    const issueBtn = (currentUser === 'root') ?
+                        `<button class="small-btn" onclick="toggleIssue('${item.code}')">${item.issued === 'Отдан' ? '📦 На склад' : '📤 Отдать'}</button>` : '';
+                    tr.innerHTML = `
+                        <td><strong>${item.code}</strong></td>
+                        <td><span class="badge ${item.status === 'Активирован' ? 'badge-active' : 'badge-inactive'}">${item.status}</span></td>
+                        <td><span class="badge ${item.issued === 'Отдан' ? 'badge-issued' : 'badge-stock'}">${item.issued || 'На складе'}</span></td>
+                        <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <button class="small-btn" onclick="showDetails('${item.code}')">🔍 Инфо</button>
+                            ${issueBtn}
+                            <button class="small-btn" onclick="showQr('${item.code}')">📷 QR</button>
+                            <button class="small-btn" onclick="generateCertImage('${item.code}')">🎨 Сертификат</button>
+                            ${(item.status === 'Активирован') ? `<button class="small-btn danger" onclick="rollback('${item.code}')">↩️ Восстановить</button>` : ''}
+                            ${(currentUser === 'root') ? `<button class="small-btn danger" onclick="deleteCert('${item.code}')">🗑️ Удалить</button>` : ''}
+                        </td>`;
+                    tbody.appendChild(tr);
+                });
+                filterCerts(); // применить поиск после загрузки
+            });
+        }
+        function toggleIssue(code) {
+            jsonp(apiUrl + '?action=toggleIssue&code=' + code + '&user=' + userParam(), function(d) {
+                if (d.success) {
+                    loadCertificatesForTab();
+                    showToast('Статус выдачи изменён', 'success');
+                } else showToast(d.message, 'error');
+            });
+        }
+        function showDetails(code) {
+            jsonp(apiUrl + '?action=list', function(d) {
+                const item = (d.codes || []).find(c => c.code === code);
+                if (!item) return;
+                document.getElementById('detailsTitle').textContent = 'Детали сертификата ' + code;
+                document.getElementById('detailsContent').innerHTML = `
+                    <p><strong>Статус активации:</strong> ${item.status}</p>
+                    <p><strong>Дата создания:</strong> ${item.date}</p>
+                    <p><strong>Срок действия:</strong> ${item.duration}</p>
+                    <p><strong>Комментарий:</strong> ${item.comment}</p>
+                    <p><strong>Статус выдачи:</strong> ${item.issued || 'На складе'}</p>
+                `;
+                document.getElementById('detailsModal').classList.remove('hidden');
+            });
+        }
+        function closeDetails() { document.getElementById('detailsModal').classList.add('hidden'); }
+        function showQr(code) {
+            const url = window.location.origin + window.location.pathname + '?code=' + code;
+            document.getElementById('qrTitle').textContent = 'QR для ' + code;
+            document.getElementById('qrImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
+            document.getElementById('qrLink').value = url;
+            document.getElementById('qrModal').classList.remove('hidden');
+        }
+        function closeQr() { document.getElementById('qrModal').classList.add('hidden'); }
+        function copyQr() {
+            navigator.clipboard.writeText(document.getElementById('qrLink').value);
+            showToast('Ссылка скопирована', 'success');
+        }
+        function rollback(code) {
+            if (!confirm('Восстановить сертификат ' + code + '?')) return;
+            jsonp(apiUrl + '?action=deactivate&code=' + code + '&user=' + userParam(), function(d) {
+                if (d.success) {
+                    loadCertificatesForTab();
+                    showToast('Сертификат восстановлен', 'success');
+                } else showToast(d.message, 'error');
+            });
+        }
+        function deleteCert(code) {
+            if (!confirm('Удалить сертификат ' + code + ' безвозвратно?')) return;
+            jsonp(apiUrl + '?action=delete&code=' + code + '&user=' + userParam(), function(d) {
+                if (d.success) {
+                    loadCertificatesForTab();
+                    showToast('Сертификат удалён', 'success');
+                } else showToast(d.message, 'error');
+            });
+        }
+
+        // ========== ГРАФИЧЕСКИЙ СЕРТИФИКАТ ==========
+        function generateCertImage(code) {
+            if (generatingCert) return;
+            generatingCert = true;
+            const modal = document.getElementById('certDownloadModal');
+            const spinner = document.getElementById('certSpinner');
+            const canvas = document.getElementById('certCanvas');
+            const errorDiv = document.getElementById('certError');
+            const btnDownload = document.getElementById('btnDownloadCert');
+            const btnCopy = document.getElementById('btnCopyCertLink');
+
+            modal.classList.remove('hidden');
+            spinner.style.display = 'block';
+            canvas.style.display = 'none';
+            errorDiv.style.display = 'none';
+            btnDownload.disabled = true;
+            btnCopy.disabled = true;
+
+            jsonp(apiUrl + '?action=list', function(d) {
+                const item = (d.codes || []).find(c => c.code === code);
+                if (!item) {
+                    errorDiv.textContent = 'Сертификат не найден в базе.';
+                    errorDiv.style.display = 'block';
+                    spinner.style.display = 'none';
+                    generatingCert = false;
+                    return;
+                }
+
+                canvas.width = 800;
+                canvas.height = 500;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#1c1c1e';
+                ctx.fillRect(0, 0, 800, 500);
+                ctx.strokeStyle = '#ff9f0a';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(10, 10, 780, 480);
+
+                const logo = new Image();
+                logo.crossOrigin = 'Anonymous';
+                logo.src = 'https://sun9-52.userapi.com/s/v1/ig2/FU7bN5q2jKV6WvIw1MQODNfSCOpVecMzuP5FQdOyrofQcIcs-bIRdAjlPtoHyuC1uVQI4rGjL04epRK863qokx-Q.jpg?quality=95&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1024x1024&from=bu&cs=1024x0';
+                logo.onload = function() {
+                    ctx.drawImage(logo, 30, 30, 64, 64);
+                    addTextAndQR();
+                };
+                logo.onerror = function() { addTextAndQR(); };
+
+                function addTextAndQR() {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 28px Arial';
+                    ctx.fillText('Подарочный сертификат', 120, 70);
+                    ctx.font = '20px Arial';
+                    ctx.fillText('Самоцветы DEV', 120, 100);
+                    ctx.font = '24px Arial';
+                    ctx.fillText('Код: ' + code, 40, 160);
+                    ctx.fillText('Срок действия: ' + item.duration, 40, 200);
+                    if (item.comment) {
+                        ctx.font = '18px Arial';
+                        ctx.fillText('Комментарий: ' + item.comment, 40, 240);
+                    }
+
+                    try {
+                        if (typeof qrcode === 'undefined') throw new Error('Библиотека QR не загружена. Обновите страницу (Ctrl+F5).');
+                        const qrUrl = window.location.origin + window.location.pathname + '?code=' + code;
+                        const qr = qrcode(0, 'M');
+                        qr.addData(qrUrl);
+                        qr.make();
+                        const moduleCount = qr.getModuleCount();
+                        const tileSize = Math.floor(200 / moduleCount);
+                        const qrSize = moduleCount * tileSize;
+                        const qrX = 580, qrY = 280;
+
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(qrX - 4, qrY - 4, qrSize + 8, qrSize + 8);
+
+                        for (let row = 0; row < moduleCount; row++) {
+                            for (let col = 0; col < moduleCount; col++) {
+                                if (qr.isDark(row, col)) {
+                                    ctx.fillStyle = '#000000';
+                                    ctx.fillRect(qrX + col * tileSize, qrY + row * tileSize, tileSize, tileSize);
+                                }
+                            }
+                        }
+
+                        spinner.style.display = 'none';
+                        canvas.style.display = 'block';
+                        btnDownload.disabled = false;
+                        btnCopy.disabled = false;
+                        window._certCode = code;
+                    } catch (e) {
+                        errorDiv.textContent = 'Ошибка при создании QR-кода: ' + e.message;
+                        errorDiv.style.display = 'block';
+                        spinner.style.display = 'none';
+                        console.error(e);
+                    }
+                    generatingCert = false;
+                }
+            });
+        }
+        function closeCertDownload() {
+            document.getElementById('certDownloadModal').classList.add('hidden');
+            document.getElementById('certSpinner').style.display = 'none';
+            document.getElementById('certCanvas').style.display = 'none';
+            document.getElementById('certError').style.display = 'none';
+            generatingCert = false;
+        }
+        function downloadCertImage() {
+            const canvas = document.getElementById('certCanvas');
+            if (!canvas || canvas.style.display === 'none') return;
+            const link = document.createElement('a');
+            link.download = 'certificate_' + (window._certCode || 'unknown') + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        function copyCertLink() {
+            if (!window._certCode) return;
+            const url = window.location.origin + window.location.pathname + '?code=' + window._certCode;
+            navigator.clipboard.writeText(url).then(() => showToast('Ссылка скопирована', 'success'));
+        }
+
+        // ========== СОЗДАНИЕ СЕРТИФИКАТА ==========
+        function openCreateModal() { document.getElementById('createModal').classList.remove('hidden'); }
+        function closeCreateModal() { document.getElementById('createModal').classList.add('hidden'); }
+        function createCertificate() {
+            const code = document.getElementById('newCode').value.trim().replace(/[^A-Za-z0-9]/g, '');
+            const duration = document.getElementById('newDuration').value;
+            const comment = document.getElementById('newComment').value.trim();
+            if (!code) return showToast('Введите код', 'error');
+            const btn = document.querySelector('#createModal button.primary');
+            btn.disabled = true;
+            jsonp(apiUrl + '?action=create&code=' + code + '&duration=' + duration + '&comment=' + comment + '&user=' + userParam(), function(d) {
+                btn.disabled = false;
+                if (d.success) {
+                    closeCreateModal();
+                    loadCertificatesForTab();
+                    showToast('Сертификат создан', 'success');
+                } else {
+                    showToast(d.message, 'error');
+                }
+            });
+        }
+
+        // ========== ЛОГИ ==========
+        function loadLogs() {
+            jsonp(apiUrl + '?action=logs', function(d) {
+                const tbody = document.querySelector('#logsTable tbody');
+                tbody.innerHTML = '';
+                (d.logs || []).forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${row[0]||''}</td><td>${row[1]||''}</td><td>${row[2]||''}</td><td>${row[3]||''}</td><td>${row[4]||''}</td>`;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+        function exportLogsCSV() {
+            jsonp(apiUrl + '?action=logs', function(d) {
+                let csv = 'Время,Пользователь,Действие,Код,Результат\n';
+                (d.logs || []).forEach(row => {
+                    csv += row.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',') + '\n';
+                });
+                const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'logs.csv';
+                link.click();
+                URL.revokeObjectURL(link.href);
+            });
+        }
+
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        (function() {
+            const saved = localStorage.getItem('cert_logged_in') === 'true' ? localStorage.getItem('cert_user') : null;
+            if (saved && (saved === 'root' || saved.startsWith('volonter'))) {
+                currentUser = saved;
+                initUI();
+            } else {
+                pages.login.classList.add('active');
+            }
+            document.addEventListener('click', function(e) {
+                if (!sidebar.contains(e.target) && e.target !== document.querySelector('.menu-btn')) closeSidebar();
+            });
+        })();
     </script>
 </body>
 </html>
